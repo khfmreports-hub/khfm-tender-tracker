@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Add Tender — KHFM Tender Tracker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@500;700;900&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#0F2036; --paper:#F7F3E9; --gold:#C9962C; --gold-deep:#8F6A16;
+    --ledger:#0F2036; --ledger-2:#16304D; --border:#D9CFB4; --slate:#6B7686;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; min-height:100vh;
+    background: radial-gradient(1200px 500px at 10% -10%, #1B3A5C 0%, transparent 60%), var(--ledger);
+    color:var(--paper); font-family:'Inter',sans-serif; -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:720px; margin:0 auto; padding:32px 20px 60px;}
+  header{display:flex; justify-content:space-between; align-items:flex-end; flex-wrap:wrap; gap:16px; border-bottom:2px solid rgba(247,243,233,0.15); padding-bottom:20px; margin-bottom:26px;}
+  .eyebrow{font-family:'IBM Plex Mono',monospace; font-size:11.5px; letter-spacing:.18em; text-transform:uppercase; color:var(--gold); margin:0 0 8px;}
+  h1{font-family:'Roboto Slab',serif; font-weight:900; font-size:clamp(24px,4vw,34px); margin:0; letter-spacing:-0.01em;}
+  h1 span{color:var(--gold);}
+  nav a{font-family:'IBM Plex Mono',monospace; font-size:12px; color:rgba(247,243,233,0.5); text-decoration:none;}
+  nav a#dashLink{display:none; color:var(--gold); border:1px solid rgba(201,150,44,0.4); padding:7px 14px; border-radius:4px; margin-right:10px;}
+  nav a#logoutLink{padding:7px 14px;}
+
+  .card{background:var(--paper); border-radius:6px; padding:28px 26px; box-shadow:0 20px 50px rgba(0,0,0,0.35);}
+  .field{margin-bottom:18px;}
+  label{display:block; font-family:'IBM Plex Mono',monospace; font-size:11px; text-transform:uppercase; letter-spacing:.05em; color:var(--slate); margin-bottom:6px;}
+  input, textarea, select{
+    width:100%; padding:10px 12px; border:1px solid var(--border); border-radius:4px;
+    font-family:'Inter',sans-serif; font-size:14px; color:var(--ink); background:#fff;
+  }
+  textarea{resize:vertical; min-height:70px;}
+  input:focus, textarea:focus, select:focus{outline:2px solid var(--gold); outline-offset:-1px;}
+  .row2{display:grid; grid-template-columns:1fr 1fr; gap:16px;}
+  @media (max-width:560px){.row2{grid-template-columns:1fr;}}
+
+  button{
+    width:100%; padding:13px; background:var(--ink); color:var(--paper); border:none; border-radius:4px;
+    font-family:'Roboto Slab',serif; font-weight:700; font-size:14px; letter-spacing:.03em; cursor:pointer; margin-top:6px;
+  }
+  button:hover{background:#1B3A5C;}
+  button:disabled{opacity:.6; cursor:default;}
+
+  .msg{margin-top:16px; padding:12px 14px; border-radius:4px; font-size:13.5px; display:none;}
+  .msg.ok{display:block; background:rgba(62,122,82,0.1); color:#2E5A3D; border:1px solid rgba(62,122,82,0.3);}
+  .msg.err{display:block; background:rgba(166,58,50,0.1); color:#7A2A24; border:1px solid rgba(166,58,50,0.3);}
+
+  .hint{font-family:'IBM Plex Mono',monospace; font-size:10.5px; color:var(--slate); margin-top:4px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <p class="eyebrow">Tender Entry</p>
+      <h1>Add <span>Tender</span></h1>
+    </div>
+    <nav>
+      <a href="/" id="dashLink">← Dashboard</a>
+      <a href="/logout" id="logoutLink">Log out</a>
+    </nav>
+  </header>
+
+  <div class="card">
+    <form id="tenderForm">
+      <div class="field">
+        <label for="org">Organisation Name *</label>
+        <input type="text" id="org" name="org" required>
+      </div>
+
+      <div class="row2">
+        <div class="field">
+          <label for="tenderId">Tender ID / Number *</label>
+          <input type="text" id="tenderId" name="tenderId" required>
+        </div>
+        <div class="field">
+          <label for="due">Due Date</label>
+          <input type="date" id="due" name="due">
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="work">Name of Work / Scope *</label>
+        <textarea id="work" name="work" required></textarea>
+      </div>
+
+      <div class="row2">
+        <div class="field">
+          <label for="estimate">Estimate Value (₹)</label>
+          <input type="number" id="estimate" name="estimate" min="0" step="1">
+        </div>
+        <div class="field">
+          <label for="emd">EMD Amount (₹)</label>
+          <input type="number" id="emd" name="emd" min="0" step="1">
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="emdType">EMD / Bank Guarantee / DD / Eligibility Note</label>
+        <textarea id="emdType" name="emdType"></textarea>
+      </div>
+
+      <div class="field">
+        <label for="note">Remark / Filing Note</label>
+        <input type="text" id="note" name="note">
+      </div>
+
+      <div class="row2">
+        <div class="field">
+          <label for="status">Status</label>
+          <select id="status" name="status">
+            <option value="Pending" selected>Pending</option>
+            <option value="Awarded">Awarded</option>
+            <option value="Not Awarded">Not Awarded</option>
+            <option value="Disqualified">Disqualified</option>
+            <option value="Technically Qualified">Technically Qualified</option>
+            <option value="Not Meeting Criteria">Not Meeting Criteria</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="statusDetail">Status Detail (optional)</label>
+          <input type="text" id="statusDetail" name="statusDetail">
+        </div>
+      </div>
+
+      <button type="submit" id="submitBtn">Save Tender</button>
+      <div class="msg" id="formMsg"></div>
+      <p class="hint">* required. Entries save immediately and are visible to admins on the dashboard.</p>
+    </form>
+  </div>
+</div>
+
+<script>
+  fetch('/api/whoami').then(r => r.json()).then(d => {
+    if(d.role === 'admin') document.getElementById('dashLink').style.display = 'inline-block';
+  }).catch(()=>{});
+
+  const form = document.getElementById('tenderForm');
+  const msg = document.getElementById('formMsg');
+  const btn = document.getElementById('submitBtn');
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    btn.disabled = true;
+    btn.textContent = 'Saving…';
+    msg.className = 'msg';
+    msg.textContent = '';
+
+    const data = Object.fromEntries(new FormData(form).entries());
+
+    try{
+      const res = await fetch('/api/tenders', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify(data)
+      });
+      const result = await res.json();
+      if(!res.ok) throw new Error(result.error || 'Save failed');
+
+      msg.className = 'msg ok';
+      msg.textContent = `Saved as Sr. No. ${result.sr}.`;
+      form.reset();
+      document.getElementById('status').value = 'Pending';
+    }catch(err){
+      msg.className = 'msg err';
+      msg.textContent = 'Could not save this tender. Please try again.';
+      console.error(err);
+    }finally{
+      btn.disabled = false;
+      btn.textContent = 'Save Tender';
+    }
+  });
+</script>
+</body>
+</html>

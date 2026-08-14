@@ -1,6 +1,6 @@
 {
   "name": "khfm-tender-tracker",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "private": true,
   "engines": {
     "node": ">=18"
@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "express": "^4.19.2",
-    "express-session": "^1.18.0"
+    "express-session": "^1.18.0",
+    "pg": "^8.11.5"
   }
 }
