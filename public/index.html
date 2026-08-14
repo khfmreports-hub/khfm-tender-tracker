@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KHFM Tender Register — FY 2026–27</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@500;700;900&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#0F2036;
+    --ink-soft:#3A4A5E;
+    --ledger:#0F2036;
+    --ledger-2:#16304D;
+    --paper:#F7F3E9;
+    --paper-line:#E4DCC8;
+    --paper-shadow: 0 1px 0 rgba(15,32,54,0.06);
+    --gold:#C9962C;
+    --gold-deep:#8F6A16;
+    --red:#A63A32;
+    --red-deep:#7A2A24;
+    --slate:#6B7686;
+    --green:#3E7A52;
+    --border:#D9CFB4;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      radial-gradient(1200px 500px at 10% -10%, #1B3A5C 0%, transparent 60%),
+      var(--ledger);
+    color:var(--paper);
+    font-family:'Inter',sans-serif;
+    min-height:100vh;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:1180px;margin:0 auto;padding:28px 20px 60px;}
+
+  /* ---------- Header ---------- */
+  header{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-end;
+    flex-wrap:wrap;
+    gap:16px;
+    border-bottom:2px solid rgba(247,243,233,0.15);
+    padding-bottom:20px;
+    margin-bottom:26px;
+  }
+  .eyebrow{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:11.5px;
+    letter-spacing:.18em;
+    text-transform:uppercase;
+    color:var(--gold);
+    margin:0 0 8px;
+  }
+  h1{
+    font-family:'Roboto Slab',serif;
+    font-weight:900;
+    font-size:clamp(28px,4vw,42px);
+    line-height:1.05;
+    margin:0;
+    color:var(--paper);
+    letter-spacing:-0.01em;
+  }
+  h1 span{color:var(--gold);}
+  .header-meta{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:12px;
+    color:rgba(247,243,233,0.55);
+    text-align:right;
+    line-height:1.6;
+  }
+  .header-meta b{color:var(--paper);}
+
+  /* ---------- Stat tiles ---------- */
+  .stats{
+    display:grid;
+    grid-template-columns:repeat(7,1fr);
+    gap:10px;
+    margin-bottom:22px;
+  }
+  .stat{
+    background:var(--ledger-2);
+    border:1px solid rgba(247,243,233,0.12);
+    border-radius:4px;
+    padding:14px 12px;
+    cursor:pointer;
+    transition:transform .15s ease, border-color .15s ease, background .15s ease;
+    position:relative;
+    overflow:hidden;
+  }
+  .stat:hover{transform:translateY(-2px); border-color:rgba(201,150,44,0.5);}
+  .stat.active{background:#1E3F63; border-color:var(--gold);}
+  .stat .n{
+    font-family:'Roboto Slab',serif;
+    font-weight:700;
+    font-size:26px;
+    color:var(--paper);
+    display:block;
+  }
+  .stat .l{
+    font-size:10.5px;
+    letter-spacing:.04em;
+    color:rgba(247,243,233,0.6);
+    display:block;
+    margin-top:2px;
+    line-height:1.3;
+  }
+  .stat.tone-gold .n{color:var(--gold);}
+  .stat.tone-red .n{color:#E08A82;}
+  .stat.tone-slate .n{color:#9FB0C4;}
+  .stat.tone-green .n{color:#79C295;}
+
+  /* ---------- Controls ---------- */
+  .controls{
+    display:flex;
+    gap:12px;
+    align-items:center;
+    flex-wrap:wrap;
+    margin-bottom:18px;
+  }
+  .search{
+    flex:1;
+    min-width:220px;
+    position:relative;
+  }
+  .search input{
+    width:100%;
+    background:var(--ledger-2);
+    border:1px solid rgba(247,243,233,0.18);
+    border-radius:4px;
+    padding:11px 14px 11px 36px;
+    color:var(--paper);
+    font-family:'Inter',sans-serif;
+    font-size:14px;
+  }
+  .search input::placeholder{color:rgba(247,243,233,0.4);}
+  .search input:focus{outline:2px solid var(--gold); outline-offset:-1px;}
+  .search svg{position:absolute; left:12px; top:50%; transform:translateY(-50%); opacity:.5;}
+
+  .sortsel{
+    background:var(--ledger-2);
+    border:1px solid rgba(247,243,233,0.18);
+    color:var(--paper);
+    font-family:'Inter',sans-serif;
+    font-size:13px;
+    padding:10px 12px;
+    border-radius:4px;
+  }
+  .sortsel:focus{outline:2px solid var(--gold); outline-offset:-1px;}
+
+  .count-line{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:12px;
+    color:rgba(247,243,233,0.5);
+    margin-bottom:14px;
+  }
+  .count-line b{color:var(--gold);}
+
+  /* ---------- Ledger table ---------- */
+  .ledger{
+    background:var(--paper);
+    border-radius:6px;
+    overflow:hidden;
+    box-shadow:0 20px 50px rgba(0,0,0,0.35);
+  }
+  .row{
+    display:grid;
+    grid-template-columns: 46px 1.6fr 1.9fr 100px 130px 130px;
+    gap:0;
+    align-items:stretch;
+    border-bottom:1px solid var(--paper-line);
+    cursor:pointer;
+  }
+  .row.head{
+    background:#EFE8D4;
+    font-family:'IBM Plex Mono',monospace;
+    font-size:10.5px;
+    letter-spacing:.06em;
+    text-transform:uppercase;
+    color:var(--ink-soft);
+    cursor:default;
+    position:sticky;
+    top:0;
+  }
+  .row.head > div{padding:10px 12px;}
+  .row:not(.head):hover{background:#F1EAD6;}
+  .row > div{
+    padding:14px 12px;
+    color:var(--ink);
+    font-size:13.5px;
+    display:flex;
+    align-items:center;
+    border-left:1px solid var(--paper-line);
+  }
+  .row > div:first-child{border-left:none;}
+  .c-sr{font-family:'IBM Plex Mono',monospace; color:var(--slate); font-size:12px; justify-content:center;}
+  .c-org{flex-direction:column; align-items:flex-start; gap:3px;}
+  .c-org .org-name{font-weight:600; line-height:1.35;}
+  .c-org .tender-id{font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--slate);}
+  .c-work{color:var(--ink-soft); font-size:12.5px; line-height:1.4;}
+  .c-due{flex-direction:column; align-items:flex-start; gap:2px;}
+  .c-due .d{font-family:'IBM Plex Mono',monospace; font-size:12.5px; font-weight:600;}
+  .c-due .tag{font-size:10px; text-transform:uppercase; letter-spacing:.04em;}
+  .tag.overdue{color:var(--red-deep);}
+  .tag.soon{color:var(--gold-deep);}
+  .c-val{flex-direction:column; align-items:flex-start; gap:2px;}
+  .c-val .amt{font-family:'IBM Plex Mono',monospace; font-size:12.5px;}
+  .c-val .lbl{font-size:9.5px; color:var(--slate); text-transform:uppercase; letter-spacing:.04em;}
+
+  /* stamp badges */
+  .stamp{
+    display:inline-block;
+    font-family:'Roboto Slab',serif;
+    font-weight:700;
+    font-size:11px;
+    letter-spacing:.05em;
+    text-transform:uppercase;
+    padding:5px 10px;
+    border:2px solid currentColor;
+    border-radius:3px;
+    transform:rotate(-3deg);
+    white-space:nowrap;
+  }
+  .stamp.Awarded{color:var(--green); background:rgba(62,122,82,0.08);}
+  .stamp.NotAwarded{color:var(--red-deep); background:rgba(122,42,36,0.06);}
+  .stamp.Disqualified{color:var(--red); background:rgba(166,58,50,0.08); transform:rotate(3deg);}
+  .stamp.TechnicallyQualified{color:var(--gold-deep); background:rgba(143,106,22,0.08);}
+  .stamp.NotMeetingCriteria{color:var(--slate); background:rgba(107,118,134,0.08);}
+  .stamp.Pending{color:var(--ink-soft); background:rgba(58,74,94,0.06); border-style:dashed; transform:rotate(0deg);}
+
+  /* detail panel */
+  .detail{
+    grid-column:1/-1;
+    display:none;
+    background:#EFE8D4;
+    padding:18px 24px 22px;
+    border-left:3px solid var(--gold);
+  }
+  .row.open .detail{display:block;}
+  .detail .grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:16px 32px;
+  }
+  .detail h4{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:10px;
+    text-transform:uppercase;
+    letter-spacing:.08em;
+    color:var(--slate);
+    margin:0 0 6px;
+  }
+  .detail p{margin:0; font-size:13px; color:var(--ink); line-height:1.5;}
+  .row-wrap{display:contents;}
+
+  .empty{
+    padding:60px 20px;
+    text-align:center;
+    color:var(--ink-soft);
+    font-family:'IBM Plex Mono',monospace;
+    font-size:13px;
+  }
+
+  footer{
+    margin-top:22px;
+    font-family:'IBM Plex Mono',monospace;
+    font-size:11px;
+    color:rgba(247,243,233,0.4);
+    text-align:center;
+  }
+
+  @media (max-width:900px){
+    .stats{grid-template-columns:repeat(4,1fr);}
+    .row{grid-template-columns: 34px 1.4fr 90px 100px;}
+    .c-work{display:none;}
+  }
+  @media (max-width:560px){
+    .stats{grid-template-columns:repeat(2,1fr);}
+    .row{grid-template-columns: 1fr 90px;}
+    .c-sr{display:none;}
+    .c-due{display:none;}
+    header{flex-direction:column; align-items:flex-start;}
+    .header-meta{text-align:left;}
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    .stat, .row{transition:none;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div>
+      <p class="eyebrow">Registry · FY 2026–27</p>
+      <h1>KHFM Tender <span>Register</span></h1>
+    </div>
+    <div class="header-meta">
+      Source: KHFM sheet, live extract<br>
+      As of <b id="asof"></b>
+    </div>
+  </header>
+
+  <div class="stats" id="stats"></div>
+
+  <div class="controls">
+    <div class="search">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#F7F3E9" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input id="searchInput" type="text" placeholder="Search organisation, tender ID, or scope of work…">
+    </div>
+    <select class="sortsel" id="sortSelect">
+      <option value="due-asc">Sort: Due date (earliest)</option>
+      <option value="due-desc">Sort: Due date (latest)</option>
+      <option value="est-desc">Sort: Estimate value (high–low)</option>
+      <option value="est-asc">Sort: Estimate value (low–high)</option>
+      <option value="org-asc">Sort: Organisation (A–Z)</option>
+    </select>
+  </div>
+
+  <p class="count-line">Showing <b id="countShown">0</b> of <b id="countTotal">0</b> tracked tenders</p>
+
+  <div class="ledger" id="ledger"></div>
+
+  <footer>KHFM Tender Register — internal tracking tool, not for external distribution</footer>
+</div>
+
+<script id="data-island" type="application/json">[{"sr": 1, "org": "High Court of Bombay Nagpur Bench Nagpur", "tenderId": "2026_BHCMU_1290581_1", "due": "2026-04-15", "work": "Mechanized and Manual Housekeeping Services on Outsourcing basis for the period of two years", "estimate": null, "emd": null, "emdType": "Exemption", "note": null, "status": "Technically Qualified", "statusDetail": "Price Given By Jairam Sir/Technically Qualified"}, {"sr": 2, "org": "Institute of Science Nagpur", "tenderId": "2026_DHEP_1292566_1", "due": "2026-04-15", "work": "Cleaning Services at Institute of Science for Year 2026-27, Nagpur", "estimate": null, "emd": null, "emdType": "EMD Paid", "note": "Price Given By Jairam Sir", "status": "Awarded", "statusDetail": "Tender Awded to us "}, {"sr": 3, "org": "Oil And Natural Gas Corporation Limited", "tenderId": "GEM/2026/B/7344944", "due": "2026-04-20", "work": "Hiring of catering services at ONSHORE GAS TERMINAL (OGT), Mallavaram, Kakinada (Approx. 30 KM away from Kakinada city railway station).", "estimate": 66454191, "emd": 1247000, "emdType": "Udyam", "note": null, "status": "Not Awarded", "statusDetail": "Price Given by Vinayak sir/Not Awarded to US"}, {"sr": 4, "org": "Oil And Natural Gas Corporation Limited", "tenderId": "GEM/2026/B/7404623", "due": "2026-04-24", "work": "CATERING SERVICES AT EASTERN OFFSHORE ASSET OFFICE BUILDING AT 72.14 ACRES LAND OF VAKALAPUDI, KAKINADA", "estimate": 28016385, "emd": 560000, "emdType": null, "note": null, "status": "Awarded", "statusDetail": "Tender Awded to us "}, {"sr": 5, "org": "Maharashtra Housing and Area Development Authority", "tenderId": "2026_MHADA_1295117_1", "due": "2026-04-23", "work": "Annual Cleaning of the toilets corridors staircase office and passage etc by machine at CAO bldg of MHADA Griha Nirman Bhavan kalanagar bandra E Mumbai 400051 for the period of two years 2026 to 28 Second Call", "estimate": null, "emd": null, "emdType": "EMD Paid/Pargaokar tender", "note": null, "status": "Awarded", "statusDetail": "Tender Awded to us  ( Subcontractor Tender Pargaonkar)"}, {"sr": 6, "org": "Indian Oil Corporation Limited", "tenderId": "GEM/2026/B/7446827", "due": "2026-05-02", "work": "Caretaking Services for Cryovilla, Transit Camp cum Guest House, Nashik", "estimate": null, "emd": 8700, "emdType": "MSE Examption Udyam Upload Small ", "note": "Sagar naik tender", "status": "Pending", "statusDetail": null}, {"sr": 8, "org": "Indian Oil Corporation Limited", "tenderId": "GEM/2026/B/7323482", "due": "2026-05-06", "work": "PROVIDING FACILITY MANAGEMENT SERVICES AT INDIAN OIL RESIDENTIAL COLONY, D.N. NAGAR, ANDHERI.", "estimate": 68932522.52, "emd": 173000, "emdType": "The annual turnover of the bidders (based on standalone financials of bidding entity) during any of the preceding thr...", "note": "Sagar naik tender", "status": "Pending", "statusDetail": null}, {"sr": 9, "org": "Indian Institute Of Technology (iit)", "tenderId": "GEM/2026/B/7463505", "due": "2026-05-20", "work": "Providing mess catering services in group of hostels (jasper hostel, topaz hostel and sapphire hostel) of indian institute of technology (indian school of mines) Dhanbad- Jharkhand", "estimate": 67158000, "emd": 1345000, "emdType": "Minimum average turnover of 2.70 cr for fy 2022-23,2023-24 &2024-25", "note": null, "status": "Pending", "statusDetail": null}, {"sr": 10, "org": "Indian Institute Of Technology (iit)", "tenderId": "GEM/2026/B/7463564", "due": "2026-05-20", "work": "Providing mess catering services in group of hostels (amber hostel and emerald hostel) of indian institute of technology (iindian school of mines), dhanbad- Jharkhand", "estimate": 58968000, "emd": 1180000, "emdType": "Minimum average turnover of 2.35 cr for fy 2022-23,2023-24 &2024-25", "note": null, "status": "Pending", "statusDetail": null}, {"sr": 11, "org": "Indian Institute Of Technology (iit)", "tenderId": "GEM/2026/B/7463098", "due": "2026-05-20", "work": "PRoviding mess catering services in group of hostels (aquamarine hostels and diamond hostel) of indian institute of technology (indian school of mines) dhanbad", "estimate": 70434000, "emd": 1410000, "emdType": "Minimum average turnover of 2.80 cr for fy 2022-23,2023-24 &2024-25", "note": null, "status": "Pending", "statusDetail": null}, {"sr": 12, "org": "Indian Institute Of Technology (iit)", "tenderId": "GEM/2026/B/7463706", "due": "2026-05-20", "work": "Providing mess catering services in group of hostels (ruby and rpsaline international hostel and opal hostel) of indian institute of technology (indian school of mines) dhanbad", "estimate": 57330000, "emd": 1150000, "emdType": "Minimum average turnover of 2.30 cr for fy 2022-23,2023-24 &2024-25", "note": null, "status": "Pending", "statusDetail": null}, {"sr": 13, "org": "Nuclear Power Corporation Of India Limited", "tenderId": "GEM/2026/B/7442969", "due": "2026-05-25", "work": "Pest, Rodent and Termite Control Services at NPCIL Offices Mumbai at Nabhikiya Urja Bhavan,Vikram Sarabhai Bhavan, Trombay Village Stores and World Trade Centre.", "estimate": 1289110.4, "emd": 25783, "emdType": null, "note": null, "status": "Pending", "statusDetail": null}, {"sr": 14, "org": "Central Railway", "tenderId": "GEM/2026/B/7490391", "due": "2026-05-28", "work": "Outsourcing the work for Mechanised Cleaning of 05 Stations – Wardha, Chandrapur, Sewagram, Pulgaon & Dhamangaon For a Period of 04 Years.", "estimate": 60043697, "emd": 1200873, "emdType": "The bidder should have an aggregate financial turnover not less than 1.5 times the advertised Bid value during the la...", "note": null, "status": "Pending", "statusDetail": null}, {"sr": 15, "org": "Department Of Atomic Energy", "tenderId": "GEM/2026/B/7513891", "due": "2026-05-28", "work": "Umbrella Contract for Housekeeping work in Vikram Sarabhai Bhavan, including Office Building (Lower to 8th floor), surrounding areas, and VSB Multi Level Car Parking, approx. area 55000 Sqmt (40000 Sqmt office building + 5000 Sqmt Surrounding area + 10000 Sqmt Multi level Car Parking) at office building Vikram Sarabhai Bhavan Anushaktinagar, and VSB Multi level Car Parking Mumbai-400094, Maharashtra", "estimate": 14000000, "emd": 280000, "emdType": "Exemption/", "note": null, "status": "Technically Qualified", "statusDetail": "Ranjit -sub contractor/Technically Qualified on 28/07/2026"}, {"sr": 16, "org": "Indian Oil Corporation Limited", "tenderId": "GEM/2026/B/7540804", "due": "2026-05-29", "work": "PROVIDING CATERING AND INTERNAL HOUSE KEEPING AT INDIAN OIL EXECUTIVE TRANSIT ACCOMODATION, SUCHIDHAM, GOREGOAN", "estimate": 6179571.22, "emd": 16000, "emdType": "Exemption/", "note": "Sagar naik tender/Not Awarded to us", "status": "Not Awarded", "statusDetail": null}, {"sr": 17, "org": "All India Institute Of Medical Sciences (aiims)", "tenderId": "GEM/2026/B/7541195", "due": "2026-06-03", "work": "Service Provider on Outsourcing basis for the Work of Cleaning, Sanitation, Patient Care & allied services in OPD & IPD”", "estimate": 298018850.57, "emd": 6000000, "emdType": "Exemption/", "note": "Disqualified/No legible document submitted to established physical presence in Nagpur", "status": "Disqualified", "statusDetail": null}, {"sr": 18, "org": "SAINIK SCHOOL BALACHADI", "tenderId": "GEM/2026/B/7561064", "due": "2026-06-04", "work": "CONTRACT FOR MESSING AND FOOD CATERING SERVICES FOR THE YEAR 2026-27-Jamnagar", "estimate": 49276800, "emd": null, "emdType": "The annual turnover of the firm should be more than 2 crore per annum for last 3 years. ITR for last three years is t...", "note": "Disqualified (Experience as per details in bid was not found to be available with bidder)", "status": "Disqualified", "statusDetail": null}, {"sr": 19, "org": "HPCL", "tenderId": "GEM/2026/B/7543434", "due": "2026-06-05", "work": "Catering Services Hindustan Bhavan and Wadala", "estimate": null, "emd": 1953000, "emdType": "Bidders should have minimum average annual turnover of 340.42 lacs during the last three financial years ending in Ma...", "note": "Not Meeting Technical PQC", "status": "Not Meeting Criteria", "statusDetail": null}, {"sr": 20, "org": "National Bank For Agriculture And Ruraldevelopment", "tenderId": "GEM/2026/B/7487080", "due": "2026-06-05", "work": "provide the Manpower Services for carrying out Maintenance of Gardens, hedges and lawns and Horticultural work for the Office Buildings and 6 Residential Colonies of NABARD in Mumbai.", "estimate": 8685184, "emd": 174000, "emdType": "Minimum Average Annual Turnover of the bidder (For the last 3 years ending on 31.03.2025) - Rs. 27 lakhs", "note": null, "status": "Pending", "statusDetail": null}, {"sr": 21, "org": "Nuclear Fuel Complex Hyderabad", "tenderId": "GEM/2026/B/7616951", "due": "2026-06-13", "work": "Facility Management Service at Gurukul Guesthouse by Outsourcing of “Catering cum Guesthouse Maintenance Services”", "estimate": 16624838, "emd": 332497, "emdType": "Minimum average annual turnover shall be Rs. 49.87Lakhs during last 3 consecutive ϐinancial years ending with 31.03.2...", "note": "Bid Not Awarded to us", "status": "Not Awarded", "statusDetail": null}, {"sr": 22, "org": "National Institute Of Technology (nit)", "tenderId": "GEM/2026/B/7557769", "due": "2026-06-16", "work": "PROVIDING MESS/CATERING SERVICES TO THE BOY’S AND GIRL’S HOSTEL RESIDENTS OF NATIONAL INSTITUTE OF TECHNOLOGY ANDHRA PRADESH, TADEPALLIGUDEM", "estimate": null, "emd": 2500000, "emdType": "The average annual financial turnover for 3 consecutive financial years i.e., 2022-23, 2023- 24 & 2024-25 of the bidd...", "note": null, "status": "Pending", "statusDetail": null}, {"sr": 23, "org": "State Bank Of India (sbi)", "tenderId": "GEM/2026/B/7616486", "due": "2026-06-24", "work": "COMPREHENSIVE ANNUAL CONTRACT FOR HOUSE KEEPING& MAINTENANCE SERVICES AT ADMINISTRATIVE OFFICE BUILDING,CPCs, DCBs, RBO DILSHUKNAGAR, RBO HIMAYATHNAGAR, RBO VIKARABAD, RBO SECUNDERABAD, AND BRANCHES UNDER ADMIN OFFICE SECUNDERABAD (Near Patny Centre, Secunderabad).", "estimate": 135228839.82, "emd": 1352000, "emdType": "The bidder should have a minimum average annual turnover of Rs.405.69 lakhs (Including GST) for the previous three ye...", "note": null, "status": "Pending", "statusDetail": null}, {"sr": 24, "org": "National Institute Of Technology (nit)", "tenderId": "GEM/2026/B/7624254", "due": "2026-06-25", "work": "MESS CATERING SERVICE FOR UNIT B", "estimate": 135000000, "emd": 2700000, "emdType": "Copy of minimum average annual turnover of the bidder during last three years financial years (2022- 23, 2023-24 and ...", "note": null, "status": "Pending", "statusDetail": null}, {"sr": 25, "org": "National Institute Of Technology (nit)", "tenderId": "GEM/2026/B/7622714", "due": "2026-06-25", "work": "MESS CATERING SERVICE FOR UNIT A", "estimate": 202500000, "emd": 4050000, "emdType": "minimum average annual turnover of the bidder during last three years financial years (2022-23, 2023-24 and 2024-25.)...", "note": null, "status": "Pending", "statusDetail": null}, {"sr": 26, "org": "National Institute Of Technology (nit)", "tenderId": "GEM/2026/B/7623127", "due": "2026-06-25", "work": "MESS CATERING SERVICE FOR UNIT C", "estimate": 94500000, "emd": 1890000, "emdType": "minimum average annual turnover of the bidder during last three years financial years (2022- 23, 2023-24 and 2024-25....", "note": null, "status": "Pending", "statusDetail": null}, {"sr": 27, "org": "National Institute Of Technology (nit)", "tenderId": "GEM/2026/B/7623276", "due": "2026-06-25", "work": "MESS CATERING SERVICE FOR UNIT D", "estimate": 121500000, "emd": 2430000, "emdType": "minimum average annual turnover of the bidder during last three years financial years (2022- 23, 2023-24 and 2024-25....", "note": null, "status": "Pending", "statusDetail": null}, {"sr": 28, "org": "Central Railway Stores Deptt", "tenderId": "GEM/2026/B/7617712", "due": "2026-06-27", "work": "outsourcing the work for Manual cleaning of 43 Minor Railway Colonies of Nagpur-Itarsi & Amla-Parasia Sections (Excluding Nagpur, Amla, Junnardeo) On Outcome Basis For a Period of 04 Years.", "estimate": 57780900, "emd": 1155620, "emdType": "Financial Turnover: The bidder should have an aggregate financial turnover not less than 1.5 times the advertised Bid...", "note": "Jairam", "status": "Pending", "statusDetail": null}, {"sr": 29, "org": "Madras Fertilizers Limited (mfl)", "tenderId": "GEM/2026/B/7656048", "due": "2026-06-27", "work": "STAFF CANTEEN SERVICE CONTRACT 2026-28  MANALI, CHENNAI", "estimate": 57000000, "emd": 1140038, "emdType": "Tenderer should have good reputation and the average annual financial turnover is more than or equal to 30% of estima...", "note": null, "status": "Pending", "statusDetail": null}, {"sr": 30, "org": "Bank Of Baroda", "tenderId": "GEM/2026/B/7615623", "due": "2026-07-01", "work": "Providing Catering Services at Staff Canteen and Executive Canteen of Baroda Corporate Centre and its satellite Offices, Mumbai", "estimate": 40000000, "emd": 400000, "emdType": "The bidder should be a profit-making company/firm for the last three consecutive financial years (2025-26, 2024-25, 2...", "note": null, "status": "Pending", "statusDetail": null}, {"sr": 31, "org": "State Bank Of India (sbi)", "tenderId": "GEM/2026/B/7677873", "due": "2026-07-09", "work": "provide Mechanized Housekeeping and maintenance services for all of the following services to be set up for an effective service delivery process • Mechanized Housekeeping / Cleaning Services • Horticulture / Landscaping Services-Bengaluru", "estimate": 23332794, "emd": 200000, "emdType": "Bidder should have had Average Annual Financial Turnover of Rs 59 Lakh during the last three years ending 31st March ...", "note": null, "status": "Pending", "statusDetail": null}, {"sr": 32, "org": "Hindustan Petroleum Corporation Ltd", "tenderId": "GEM/2026/B/7684758", "due": "2026-07-10", "work": "Provide 24x7 cafeteria services at Visakh Refinery-VISAKHAPATNAM, ANDHRA PRADESH", "estimate": null, "emd": 4750000, "emdType": "Average annual financial turnover during the last 3 years, ending 31st March 2025 i.e., for the financial years April...", "note": null, "status": "Pending", "statusDetail": null}, {"sr": 33, "org": "South East Central Railway", "tenderId": "GEM/2026/B/7697740", "due": "2026-07-13", "work": "Mechanized Cleaning and Housekeeping of Chhindwara Railway station for a period of Four (04) years on outcome and activity basis.", "estimate": 54113153, "emd": null, "emdType": "The bidder should have an aggregate financial turnover not less than 1.5 times the advertised Bid value during the la...", "note": null, "status": "Pending", "statusDetail": null}, {"sr": 34, "org": "State Bank Of India (sbi)", "tenderId": "GEM/2026/B/7706536", "due": "2026-07-15", "work": "COMPREHENSIVE ANNUAL CONTRACT FOR HOUSE KEEPING & MAINTENANCE SERVICES AT ADMINISTRATIVE OFFICE BUILDING,CPCs, DCBs, RBO JOGLUMBA, RBO KHAMMAM, RBO MAHBUBNAGAR, RBO NALGONDA, RBO SURYAPET AND BRANCHES UNDER ADMIN OFFICE NALGONDA (Vidya Nagar Colony,Nalgonda).-Telangana", "estimate": 135922765.29, "emd": 1359227, "emdType": "The bidder should have a minimum average annual turnover of Rs.407.76 Lakhs (Including GST) for the previous three ye...", "note": null, "status": "Pending", "statusDetail": null}, {"sr": 35, "org": "Western Railway", "tenderId": "GEM/2026/B/7711438", "due": "2026-07-25", "work": "Housekeeping of EMU carshed at mumbai central & kandivali for period of 25 month", "estimate": 36211339, "emd": 331100, "emdType": "The bidder should have an aggregate ϐinancial turnover not less than 1.5 times the advertised Bid value during the la...", "note": null, "status": "Pending", "statusDetail": null}, {"sr": 36, "org": "Oil And Natural Gas Corporation Limited", "tenderId": "GEM/2026/B/7749474", "due": "2026-07-27", "work": "Hiring of Canteen Services for ONGC, Rajahmundry Asset, Rajahmundry for a period of three years-Andhra Pradesh", "estimate": null, "emd": 616000, "emdType": "Average turnover for the previous (Latest) Three financial year of the bidder from the date of actual techno-commerci...", "note": null, "status": "Pending", "statusDetail": null}, {"sr": 37, "org": "Western Railway", "tenderId": "GEM/2026/B/7715470", "due": "2026-07-29", "work": "\"CLEANING CONTRACT OF DRM/MMCT OFFICE COMPLEX ON MANPOWER BASIS.\"", "estimate": 24489910.19, "emd": 489800, "emdType": "The bidder should have an aggregate financial turnover not less than 1.5 times the advertised bid value during last t...", "note": null, "status": "Pending", "statusDetail": null}, {"sr": 38, "org": "Dr. Panjabrao Deshmukh Krishi Vidyapeeth Akola", "tenderId": "2026_ISRTP_917622_1", "due": "2026-07-29", "work": "CATERING AND ALLIED SERVICES FOR CANTEEN SERVING LIMITED VEG MEALS THALI B BLOCK AT IISER TIRUPATI", "estimate": null, "emd": 500000, "emdType": null, "note": null, "status": "Pending", "statusDetail": null}, {"sr": 39, "org": "National Bank For Agriculture And Ruraldevelopment", "tenderId": "GEM/2026/B/7739030", "due": "2026-07-30", "work": "Annual Maintenance Contracts for Gardening Services at Bank’s Head Office Building and six Residential Colonies in Mumbai for the 01.09.2026 to 31.03.2028", "estimate": 7710237, "emd": 154000, "emdType": "Minimum Average Annual Turnover of the bidder (For the last 3 years ending on 31.03.2025) - Rs. 23 lakhs (Documentary...", "note": null, "status": "Pending", "statusDetail": null}, {"sr": 40, "org": "South East Central Railway", "tenderId": "GEM/2026/B/7753248", "due": "2026-07-31", "work": "Surface cleaning work (Outdoor conservancy services), Cleanliness/ desilting of Big outfall drains, open drains, disposal of garbage/silt through mechanized carrier, Rag picking from colonies and its disposal, Opening/cleaning of sever pipe line choke/jam, desludging of inspection chambers/manholes through mechanized system, pest control and disposal of dead animals as per pollution control board norms.-Bilaspur", "estimate": 40599557, "emd": 812000, "emdType": null, "note": null, "status": "Pending", "statusDetail": null}, {"sr": 41, "org": "Maulana Azad National Institute of Technology Bhopal", "tenderId": "2026_MANIT_915438_1", "due": "2026-07-31", "work": "Hostel Mess Catering Services.-MANIT Bhopal", "estimate": null, "emd": null, "emdType": "The bidder must have an average financial turnover, i.e., Rs. 8,000,0000 (eight crore) during the last three consecut...", "note": null, "status": "Pending", "statusDetail": null}, {"sr": 42, "org": "South East Central Railway", "tenderId": "GEM/2026/B/7781858", "due": "2026-08-03", "work": "Manual Cleaning & Housekeeping work of Tumsar Road Station on outcome and activity based for a period of 04 years i.e.1461 days", "estimate": 29379818, "emd": 296900, "emdType": "Financial Turnover: The bidder should have an aggregate financial turnover not less than 1.5 times the advertised Bid...", "note": null, "status": "Pending", "statusDetail": null}, {"sr": 43, "org": "SBI", "tenderId": "GEM/2026/B/7821009", "due": "2026-08-05", "work": "ENGAGEMENT OF OUTSOURCING AGENCY THROUGH GeM PORTAL FOR HOUSE-KEEPING AND MAINTENANCE SERVICES AT VARIOUS BRANCH PREMISES UNDER CONTROL OF RBO ASKA (GANJAM DISTRICT) - Bhubaneswar", "estimate": 47661646, "emd": 202000, "emdType": "The Bidder’s average Annual Financial Turnover during last 3 (three) Financial years (as on 31.03.2026) should be at ...", "note": null, "status": "Pending", "statusDetail": null}, {"sr": 44, "org": "South East Central Railway", "tenderId": "GEM/2026/B/7714788", "due": "2026-08-07", "work": "Round the Clock Integrated Maintenance & House Keeping of Divisional Railway Hospital, Raipur including Administrative Buildings, OPD and circulating area for a period of Two (02) years (i.e.730 days) from the date of commencement of the work", "estimate": 11679137, "emd": 233600, "emdType": "The bidder should have an aggregate Financial Turnover not less than 1.5 times the advertised Bid value during the la...", "note": null, "status": "Pending", "statusDetail": null}, {"sr": 45, "org": "Central Railway Stores Deptt", "tenderId": "GEM/2026/B/7817554", "due": "2026-08-12", "work": "Complete Management of Running Room Covering Cooking & Serving Meals, Serving Call Book, Washing of Linen and Serving the same in Good Packing, Providing Hindi/ English Newspapers & Magazines, Cleaning of Toilets, Premises, Maintenance of RO Water Purifiers, Development and Maintenance of Garden & Lawn and Supply of Subsidized Ready Meal and other associate activities like supply of Manpower for RRMS etc. round the clock at WARDHA Running Room for a period of (02) Two Years i.e., 731 days-Nagpur", "estimate": 18819089.46, "emd": 244100, "emdType": "The bidder should have an aggregate financial turnover not less than 1.5 times the advertised Bid value during the la...", "note": null, "status": "Pending", "statusDetail": null}]
+</script>
+<script>(function(){
+  const RAW = JSON.parse(document.getElementById('data-island').textContent);
+  const TODAY = new Date('2026-08-14T00:00:00');
+
+  const STATUS_META = {
+    'Awarded':               { cls:'Awarded',               label:'Awarded' },
+    'Not Awarded':           { cls:'NotAwarded',             label:'Not Awarded' },
+    'Disqualified':          { cls:'Disqualified',           label:'Disqualified' },
+    'Technically Qualified': { cls:'TechnicallyQualified',   label:'Tech. Qualified' },
+    'Not Meeting Criteria':  { cls:'NotMeetingCriteria',     label:'Not Meeting Criteria' },
+    'Pending':               { cls:'Pending',                label:'Pending' },
+  };
+
+  const STAT_ORDER = ['All','Awarded','Not Awarded','Disqualified','Technically Qualified','Not Meeting Criteria','Pending'];
+  const STAT_TONE = {
+    'All':'', 'Awarded':'tone-green', 'Not Awarded':'tone-red', 'Disqualified':'tone-red',
+    'Technically Qualified':'tone-gold', 'Not Meeting Criteria':'tone-slate', 'Pending':'tone-slate'
+  };
+
+  let activeStatus = 'All';
+  let searchTerm = '';
+  let sortMode = 'due-asc';
+  let openRow = null;
+
+  function fmtMoney(n){
+    if(n === null || n === undefined) return '—';
+    return '₹' + Math.round(n).toLocaleString('en-IN');
+  }
+  function fmtDate(d){
+    if(!d) return '—';
+    const dt = new Date(d+'T00:00:00');
+    return dt.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});
+  }
+  function daysDiff(d){
+    if(!d) return null;
+    const dt = new Date(d+'T00:00:00');
+    return Math.round((dt - TODAY)/86400000);
+  }
+
+  function computeStats(){
+    const counts = {};
+    STAT_ORDER.forEach(s => counts[s]=0);
+    counts['All'] = RAW.length;
+    RAW.forEach(r => { counts[r.status] = (counts[r.status]||0)+1; });
+    return counts;
+  }
+
+  function renderStats(){
+    const counts = computeStats();
+    const el = document.getElementById('stats');
+    el.innerHTML = '';
+    STAT_ORDER.forEach(s => {
+      const div = document.createElement('div');
+      div.className = 'stat ' + (STAT_TONE[s]||'') + (activeStatus===s ? ' active':'');
+      div.innerHTML = `<span class="n">${counts[s]||0}</span><span class="l">${s}</span>`;
+      div.addEventListener('click', () => { activeStatus = s; openRow=null; render(); });
+      el.appendChild(div);
+    });
+  }
+
+  function matches(r){
+    if(activeStatus !== 'All' && r.status !== activeStatus) return false;
+    if(searchTerm){
+      const hay = [r.org, r.tenderId, r.work].filter(Boolean).join(' ').toLowerCase();
+      if(!hay.includes(searchTerm.toLowerCase())) return false;
+    }
+    return true;
+  }
+
+  function sortRows(rows){
+    const arr = rows.slice();
+    switch(sortMode){
+      case 'due-asc': arr.sort((a,b)=>(a.due||'9999').localeCompare(b.due||'9999')); break;
+      case 'due-desc': arr.sort((a,b)=>(b.due||'0000').localeCompare(a.due||'0000')); break;
+      case 'est-desc': arr.sort((a,b)=>(b.estimate||0)-(a.estimate||0)); break;
+      case 'est-asc': arr.sort((a,b)=>(a.estimate||1e15)-(b.estimate||1e15)); break;
+      case 'org-asc': arr.sort((a,b)=>(a.org||'').localeCompare(b.org||'')); break;
+    }
+    return arr;
+  }
+
+  function renderTable(){
+    const filtered = sortRows(RAW.filter(matches));
+    document.getElementById('countShown').textContent = filtered.length;
+    document.getElementById('countTotal').textContent = RAW.length;
+
+    const ledger = document.getElementById('ledger');
+    ledger.innerHTML = '';
+
+    const head = document.createElement('div');
+    head.className = 'row head';
+    head.innerHTML = `
+      <div>Sr</div>
+      <div>Organisation</div>
+      <div>Scope of Work</div>
+      <div>Due</div>
+      <div>Estimate</div>
+      <div>Status</div>
+    `;
+    ledger.appendChild(head);
+
+    if(filtered.length === 0){
+      const e = document.createElement('div');
+      e.className = 'empty';
+      e.textContent = 'No tenders match this filter.';
+      ledger.appendChild(e);
+      return;
+    }
+
+    filtered.forEach(r => {
+      const meta = STATUS_META[r.status] || STATUS_META['Pending'];
+      const dd = daysDiff(r.due);
+      let tag = '';
+      if(dd !== null && r.status === 'Pending'){
+        if(dd < 0) tag = `<span class="tag overdue">Overdue ${Math.abs(dd)}d</span>`;
+        else if(dd <= 14) tag = `<span class="tag soon">In ${dd}d</span>`;
+      }
+
+      const wrap = document.createElement('div');
+      wrap.className = 'row-wrap';
+
+      const row = document.createElement('div');
+      row.className = 'row' + (openRow === r.sr ? ' open':'');
+      row.innerHTML = `
+        <div class="c-sr">${r.sr}</div>
+        <div class="c-org">
+          <span class="org-name">${escapeHtml(r.org||'—')}</span>
+          <span class="tender-id">${escapeHtml(r.tenderId||'—')}</span>
+        </div>
+        <div class="c-work">${escapeHtml(truncate(r.work,110))}</div>
+        <div class="c-due">
+          <span class="d">${fmtDate(r.due)}</span>
+          ${tag}
+        </div>
+        <div class="c-val">
+          <span class="amt">${fmtMoney(r.estimate)}</span>
+          <span class="lbl">EMD ${fmtMoney(r.emd)}</span>
+        </div>
+        <div><span class="stamp ${meta.cls}">${meta.label}</span></div>
+      `;
+      row.addEventListener('click', () => {
+        openRow = (openRow === r.sr) ? null : r.sr;
+        renderTable();
+      });
+      wrap.appendChild(row);
+
+      if(openRow === r.sr){
+        const detail = document.createElement('div');
+        detail.className = 'row open';
+        detail.style.display='block';
+        detail.innerHTML = `
+          <div class="detail" style="display:block;">
+            <div class="grid">
+              <div>
+                <h4>Full Scope of Work</h4>
+                <p>${escapeHtml(r.work||'—')}</p>
+              </div>
+              <div>
+                <h4>Status Detail / Filing Note</h4>
+                <p>${escapeHtml([r.note, r.statusDetail].filter(Boolean).join(' — ') || 'No update recorded yet.')}</p>
+              </div>
+              <div>
+                <h4>EMD / Eligibility Note</h4>
+                <p>${escapeHtml(truncate(r.emdType,400) || '—')}</p>
+              </div>
+              <div>
+                <h4>Financials</h4>
+                <p>Estimate: ${fmtMoney(r.estimate)} &nbsp;·&nbsp; EMD: ${fmtMoney(r.emd)}</p>
+              </div>
+            </div>
+          </div>
+        `;
+        ledger.appendChild(row);
+        ledger.appendChild(detail);
+      } else {
+        ledger.appendChild(row);
+      }
+    });
+  }
+
+  function truncate(s, n){
+    if(!s) return s;
+    return s.length > n ? s.slice(0,n-1)+'…' : s;
+  }
+  function escapeHtml(s){
+    if(s===null||s===undefined) return '';
+    return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+
+  function render(){
+    renderStats();
+    renderTable();
+  }
+
+  document.getElementById('searchInput').addEventListener('input', e => {
+    searchTerm = e.target.value;
+    openRow = null;
+    render();
+  });
+  document.getElementById('sortSelect').addEventListener('change', e => {
+    sortMode = e.target.value;
+    render();
+  });
+
+  document.getElementById('asof').textContent = TODAY.toLocaleDateString('en-GB',{day:'2-digit',month:'long',year:'numeric'});
+
+  render();
+})();
+</script>
+</body>
+</html>
