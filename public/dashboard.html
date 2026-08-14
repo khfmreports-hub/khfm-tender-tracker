@@ -168,7 +168,7 @@
   }
   .row{
     display:grid;
-    grid-template-columns: 46px 1.6fr 1.9fr 100px 130px 130px;
+    grid-template-columns: 46px 1.6fr 1.9fr 100px 125px 155px;
     gap:0;
     align-items:stretch;
     border-bottom:1px solid var(--paper-line);
@@ -274,16 +274,66 @@
 
   @media (max-width:900px){
     .stats{grid-template-columns:repeat(4,1fr);}
-    .row{grid-template-columns: 34px 1.4fr 90px 100px;}
-    .c-work{display:none;}
+    .row{grid-template-columns: 34px 1.5fr 90px 105px 148px;}
+    .row>.c-work{display:none;}
   }
-  @media (max-width:560px){
-    .stats{grid-template-columns:repeat(2,1fr);}
-    .row{grid-template-columns: 1fr 90px;}
-    .c-sr{display:none;}
-    .c-due{display:none;}
-    header{flex-direction:column; align-items:flex-start;}
+  @media (max-width:680px){
+    .wrap{padding:20px 14px 48px;}
+    h1{font-size:26px;}
+    header{flex-direction:column; align-items:flex-start; gap:10px;}
     .header-meta{text-align:left;}
+    .stats{grid-template-columns:repeat(2,1fr); gap:8px;}
+    .stat{padding:12px 10px;}
+    .stat .n{font-size:22px;}
+
+    /* Row becomes a stacked card instead of a grid table */
+    .row.head{display:none;}
+    .row:not(.head){
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+      padding:16px 14px;
+      align-items:stretch;
+    }
+    .row>div{
+      display:block;
+      padding:0;
+      border-left:none;
+      font-size:13.5px;
+    }
+    .row>.c-sr{display:none;}
+    .row>.c-org{
+      display:flex;
+      flex-direction:column;
+      align-items:flex-start;
+      gap:3px;
+      order:1;
+    }
+    .c-org .org-name{font-size:14.5px;}
+    .row>div:last-child{order:2;}
+    .row>.c-work{display:block; order:3; font-size:12.5px;}
+    .row>.c-due{
+      display:flex;
+      flex-direction:row;
+      justify-content:space-between;
+      align-items:center;
+      order:4;
+    }
+    .row>.c-val{
+      display:flex;
+      flex-direction:row;
+      justify-content:space-between;
+      align-items:center;
+      order:5;
+    }
+    .c-due .d::before{content:"Due "; color:var(--slate); font-weight:400;}
+    .stamp{transform:rotate(0deg); align-self:flex-start;}
+
+    .detail{padding:16px 14px 18px;}
+    .detail .grid{grid-template-columns:1fr; gap:14px;}
+
+    .controls{flex-direction:column; align-items:stretch;}
+    .sortsel{width:100%;}
   }
 
   @media (prefers-reduced-motion: reduce){

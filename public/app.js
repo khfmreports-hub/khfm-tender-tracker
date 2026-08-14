@@ -90,11 +90,11 @@
     const head = document.createElement('div');
     head.className = 'row head';
     head.innerHTML = `
-      <div>Sr</div>
-      <div>Organisation</div>
-      <div>Scope of Work</div>
-      <div>Due</div>
-      <div>Estimate</div>
+      <div class="c-sr">Sr</div>
+      <div class="c-org">Organisation</div>
+      <div class="c-work">Scope of Work</div>
+      <div class="c-due">Due</div>
+      <div class="c-val">Estimate</div>
       <div>Status</div>
     `;
     ledger.appendChild(head);
