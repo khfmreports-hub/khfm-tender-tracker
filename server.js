@@ -91,6 +91,10 @@ app.get('/add', requireAnyRole, (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'add.html'));
 });
 
+app.get('/app.js', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'app.js'));
+});
+
 app.get('/api/tenders', requireAdmin, async (req, res) => {
   try {
     const data = await db.getAllTenders();
