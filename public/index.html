@@ -289,6 +289,116 @@
   @media (prefers-reduced-motion: reduce){
     .stat, .row{transition:none;}
   }
+
+  /* ---------- Add/Edit buttons ---------- */
+  .addbtn{
+    background:var(--gold);
+    color:var(--ledger);
+    border:none;
+    font-family:'Inter',sans-serif;
+    font-weight:700;
+    font-size:13px;
+    padding:11px 18px;
+    border-radius:4px;
+    cursor:pointer;
+    white-space:nowrap;
+  }
+  .addbtn:hover{background:#D9A93B;}
+  .row-actions{display:flex; gap:8px; padding:14px 12px; align-items:center; border-left:1px solid var(--paper-line);}
+  .row-actions button{
+    font-family:'Inter',sans-serif;
+    font-size:11.5px;
+    font-weight:600;
+    padding:6px 10px;
+    border-radius:3px;
+    border:1px solid var(--border);
+    background:transparent;
+    color:var(--ink-soft);
+    cursor:pointer;
+  }
+  .row-actions .btn-edit:hover{background:#EFE8D4;}
+  .row-actions .btn-delete{color:var(--red-deep); border-color:var(--red-deep);}
+  .row-actions .btn-delete:hover{background:rgba(166,58,50,0.08);}
+
+  /* ---------- Modal ---------- */
+  .modal-backdrop{
+    display:none;
+    position:fixed; inset:0;
+    background:rgba(15,32,54,0.7);
+    align-items:center; justify-content:center;
+    z-index:50;
+    padding:20px;
+  }
+  .modal-backdrop.open{display:flex;}
+  .modal{
+    background:var(--paper);
+    border-radius:8px;
+    padding:26px 28px;
+    width:100%;
+    max-width:520px;
+    max-height:88vh;
+    overflow-y:auto;
+    box-shadow:0 30px 70px rgba(0,0,0,0.5);
+  }
+  .modal h3{
+    font-family:'Roboto Slab',serif;
+    color:var(--ink);
+    margin:0 0 18px;
+    font-size:19px;
+  }
+  .frow{margin-bottom:14px; display:flex; flex-direction:column; gap:5px;}
+  .frow2{display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:14px;}
+  .frow2 > div{display:flex; flex-direction:column; gap:5px;}
+  .modal label{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:10.5px;
+    text-transform:uppercase;
+    letter-spacing:.05em;
+    color:var(--slate);
+  }
+  .modal input, .modal select, .modal textarea{
+    font-family:'Inter',sans-serif;
+    font-size:13.5px;
+    padding:9px 10px;
+    border:1px solid var(--border);
+    border-radius:4px;
+    background:#fff;
+    color:var(--ink);
+  }
+  .modal textarea{resize:vertical;}
+  .modal-actions{
+    display:flex;
+    justify-content:flex-end;
+    gap:10px;
+    margin-top:18px;
+    border-top:1px solid var(--paper-line);
+    padding-top:16px;
+  }
+  .btn-cancel{
+    background:transparent;
+    border:1px solid var(--border);
+    color:var(--ink-soft);
+    padding:10px 16px;
+    border-radius:4px;
+    font-family:'Inter',sans-serif;
+    font-size:13px;
+    cursor:pointer;
+  }
+  .btn-save{
+    background:var(--gold);
+    border:none;
+    color:var(--ledger);
+    padding:10px 18px;
+    border-radius:4px;
+    font-family:'Inter',sans-serif;
+    font-weight:700;
+    font-size:13px;
+    cursor:pointer;
+  }
+  .btn-save:hover{background:#D9A93B;}
+
+  .row.hasactions{grid-template-columns: 46px 1.5fr 1.7fr 90px 120px 120px 150px;}
+  .row.head.hasactions{grid-template-columns: 46px 1.5fr 1.7fr 90px 120px 120px 150px;}
 </style>
 </head>
 <body>
@@ -300,15 +410,10 @@
       <h1>KHFM Tender <span>Register</span></h1>
     </div>
     <div class="header-meta">
-      Source: live database<br>
-      As of <b id="asof"></b>
+      <span id="roleTag"></span><br>
+      As of <b id="asof"></b> · <a href="/logout" style="color:rgba(247,243,233,0.6);">Log out</a>
     </div>
   </header>
-
-  <nav style="display:flex; gap:14px; margin-bottom:22px;">
-    <a href="/add" style="font-family:'IBM Plex Mono',monospace; font-size:12px; color:#C9962C; text-decoration:none; border:1px solid rgba(201,150,44,0.4); padding:7px 14px; border-radius:4px;">+ Add Tender</a>
-    <a href="/logout" style="font-family:'IBM Plex Mono',monospace; font-size:12px; color:rgba(247,243,233,0.5); text-decoration:none; padding:7px 14px;">Log out</a>
-  </nav>
 
   <div class="stats" id="stats"></div>
 
@@ -324,6 +429,7 @@
       <option value="est-asc">Sort: Estimate value (low–high)</option>
       <option value="org-asc">Sort: Organisation (A–Z)</option>
     </select>
+    <button class="addbtn" id="addBtn" style="display:none;">+ Add Tender</button>
   </div>
 
   <p class="count-line">Showing <b id="countShown">0</b> of <b id="countTotal">0</b> tracked tenders</p>
@@ -331,6 +437,42 @@
   <div class="ledger" id="ledger"></div>
 
   <footer>KHFM Tender Register — internal tracking tool, not for external distribution</footer>
+</div>
+
+<div class="modal-backdrop" id="modalBackdrop">
+  <div class="modal">
+    <h3 id="modalTitle">Add Tender</h3>
+    <form id="tenderForm">
+      <input type="hidden" id="f-id">
+      <div class="frow"><label>Organisation</label><input type="text" id="f-org" required></div>
+      <div class="frow"><label>Tender ID</label><input type="text" id="f-tenderId"></div>
+      <div class="frow2">
+        <div><label>Due Date</label><input type="date" id="f-due"></div>
+        <div><label>Status</label>
+          <select id="f-status">
+            <option>Pending</option>
+            <option>Awarded</option>
+            <option>Not Awarded</option>
+            <option>Disqualified</option>
+            <option>Technically Qualified</option>
+            <option>Not Meeting Criteria</option>
+          </select>
+        </div>
+      </div>
+      <div class="frow"><label>Scope of Work</label><textarea id="f-work" rows="3"></textarea></div>
+      <div class="frow2">
+        <div><label>Estimate Value (₹)</label><input type="number" step="any" id="f-estimate"></div>
+        <div><label>EMD Amount (₹)</label><input type="number" step="any" id="f-emd"></div>
+      </div>
+      <div class="frow"><label>EMD Type / Eligibility Note</label><input type="text" id="f-emdType"></div>
+      <div class="frow"><label>Filing Note</label><input type="text" id="f-note"></div>
+      <div class="frow"><label>Status Detail</label><input type="text" id="f-statusDetail"></div>
+      <div class="modal-actions">
+        <button type="button" class="btn-cancel" id="modalCancel">Cancel</button>
+        <button type="submit" class="btn-save">Save Tender</button>
+      </div>
+    </form>
+  </div>
 </div>
 
 <script src="/app.js"></script>

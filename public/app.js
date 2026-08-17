@@ -1,6 +1,6 @@
 (function(){
   let RAW = [];
-  const TODAY = new Date();
+  let ROLE = null;
 
   const STATUS_META = {
     'Awarded':               { cls:'Awarded',               label:'Awarded' },
@@ -34,7 +34,16 @@
   function daysDiff(d){
     if(!d) return null;
     const dt = new Date(d+'T00:00:00');
-    return Math.round((dt - TODAY)/86400000);
+    const today = new Date(); today.setHours(0,0,0,0);
+    return Math.round((dt - today)/86400000);
+  }
+  function escapeHtml(s){
+    if(s===null||s===undefined) return '';
+    return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+  function truncate(s, n){
+    if(!s) return s;
+    return s.length > n ? s.slice(0,n-1)+'…' : s;
   }
 
   function computeStats(){
@@ -79,6 +88,9 @@
     return arr;
   }
 
+  const canWrite = () => ROLE === 'admin' || ROLE === 'entry';
+  const canDelete = () => ROLE === 'admin';
+
   function renderTable(){
     const filtered = sortRows(RAW.filter(matches));
     document.getElementById('countShown').textContent = filtered.length;
@@ -87,22 +99,25 @@
     const ledger = document.getElementById('ledger');
     ledger.innerHTML = '';
 
+    const withActions = canWrite();
+
     const head = document.createElement('div');
-    head.className = 'row head';
+    head.className = 'row head' + (withActions ? ' hasactions' : '');
     head.innerHTML = `
-      <div class="c-sr">Sr</div>
-      <div class="c-org">Organisation</div>
-      <div class="c-work">Scope of Work</div>
-      <div class="c-due">Due</div>
-      <div class="c-val">Estimate</div>
+      <div>Sr</div>
+      <div>Organisation</div>
+      <div>Scope of Work</div>
+      <div>Due</div>
+      <div>Estimate</div>
       <div>Status</div>
+      ${withActions ? '<div>Actions</div>' : ''}
     `;
     ledger.appendChild(head);
 
     if(filtered.length === 0){
       const e = document.createElement('div');
       e.className = 'empty';
-      e.textContent = 'No tenders match this filter.';
+      e.textContent = RAW.length === 0 ? 'No tenders logged yet.' : 'No tenders match this filter.';
       ledger.appendChild(e);
       return;
     }
@@ -116,13 +131,10 @@
         else if(dd <= 14) tag = `<span class="tag soon">In ${dd}d</span>`;
       }
 
-      const wrap = document.createElement('div');
-      wrap.className = 'row-wrap';
-
       const row = document.createElement('div');
-      row.className = 'row' + (openRow === r.sr ? ' open':'');
+      row.className = 'row' + (withActions ? ' hasactions' : '') + (openRow === r.id ? ' open':'');
       row.innerHTML = `
-        <div class="c-sr">${r.sr}</div>
+        <div class="c-sr">${r.sr ?? ''}</div>
         <div class="c-org">
           <span class="org-name">${escapeHtml(r.org||'—')}</span>
           <span class="tender-id">${escapeHtml(r.tenderId||'—')}</span>
@@ -137,17 +149,21 @@
           <span class="lbl">EMD ${fmtMoney(r.emd)}</span>
         </div>
         <div><span class="stamp ${meta.cls}">${meta.label}</span></div>
+        ${withActions ? `<div class="row-actions">
+            <button class="btn-edit" data-id="${r.id}">Edit</button>
+            ${canDelete() ? `<button class="btn-delete" data-id="${r.id}">Delete</button>` : ''}
+          </div>` : ''}
       `;
-      row.addEventListener('click', () => {
-        openRow = (openRow === r.sr) ? null : r.sr;
+      row.addEventListener('click', (e) => {
+        if(e.target.closest('.row-actions')) return;
+        openRow = (openRow === r.id) ? null : r.id;
         renderTable();
       });
-      wrap.appendChild(row);
+      ledger.appendChild(row);
 
-      if(openRow === r.sr){
+      if(openRow === r.id){
         const detail = document.createElement('div');
         detail.className = 'row open';
-        detail.style.display='block';
         detail.innerHTML = `
           <div class="detail" style="display:block;">
             <div class="grid">
@@ -170,21 +186,87 @@
             </div>
           </div>
         `;
-        ledger.appendChild(row);
         ledger.appendChild(detail);
-      } else {
-        ledger.appendChild(row);
       }
     });
+
+    if(withActions){
+      ledger.querySelectorAll('.btn-edit').forEach(btn => {
+        btn.addEventListener('click', () => openModal(RAW.find(r => String(r.id) === btn.dataset.id)));
+      });
+      ledger.querySelectorAll('.btn-delete').forEach(btn => {
+        btn.addEventListener('click', () => deleteTender(btn.dataset.id));
+      });
+    }
   }
 
-  function truncate(s, n){
-    if(!s) return s;
-    return s.length > n ? s.slice(0,n-1)+'…' : s;
+  // ---------- Modal ----------
+  const modalBackdrop = document.getElementById('modalBackdrop');
+  const tenderForm = document.getElementById('tenderForm');
+
+  function openModal(record){
+    document.getElementById('modalTitle').textContent = record ? 'Edit Tender' : 'Add Tender';
+    document.getElementById('f-id').value = record ? record.id : '';
+    document.getElementById('f-org').value = record ? (record.org||'') : '';
+    document.getElementById('f-tenderId').value = record ? (record.tenderId||'') : '';
+    document.getElementById('f-due').value = record ? (record.due||'') : '';
+    document.getElementById('f-status').value = record ? record.status : 'Pending';
+    document.getElementById('f-work').value = record ? (record.work||'') : '';
+    document.getElementById('f-estimate').value = record && record.estimate !== null ? record.estimate : '';
+    document.getElementById('f-emd').value = record && record.emd !== null ? record.emd : '';
+    document.getElementById('f-emdType').value = record ? (record.emdType||'') : '';
+    document.getElementById('f-note').value = record ? (record.note||'') : '';
+    document.getElementById('f-statusDetail').value = record ? (record.statusDetail||'') : '';
+    modalBackdrop.classList.add('open');
   }
-  function escapeHtml(s){
-    if(s===null||s===undefined) return '';
-    return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  function closeModal(){
+    modalBackdrop.classList.remove('open');
+    tenderForm.reset();
+  }
+
+  document.getElementById('addBtn').addEventListener('click', () => openModal(null));
+  document.getElementById('modalCancel').addEventListener('click', closeModal);
+  modalBackdrop.addEventListener('click', (e) => { if(e.target === modalBackdrop) closeModal(); });
+
+  tenderForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const id = document.getElementById('f-id').value;
+    const payload = {
+      org: document.getElementById('f-org').value,
+      tenderId: document.getElementById('f-tenderId').value,
+      due: document.getElementById('f-due').value || null,
+      status: document.getElementById('f-status').value,
+      work: document.getElementById('f-work').value,
+      estimate: document.getElementById('f-estimate').value ? Number(document.getElementById('f-estimate').value) : null,
+      emd: document.getElementById('f-emd').value ? Number(document.getElementById('f-emd').value) : null,
+      emdType: document.getElementById('f-emdType').value,
+      note: document.getElementById('f-note').value,
+      statusDetail: document.getElementById('f-statusDetail').value,
+    };
+    try{
+      const res = await fetch(id ? `/api/tenders/${id}` : '/api/tenders', {
+        method: id ? 'PUT' : 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify(payload)
+      });
+      if(!res.ok) throw new Error('Save failed');
+      closeModal();
+      await loadTenders();
+    }catch(err){
+      alert('Could not save tender. Please try again.');
+    }
+  });
+
+  async function deleteTender(id){
+    if(!confirm('Delete this tender? This cannot be undone.')) return;
+    try{
+      const res = await fetch(`/api/tenders/${id}`, { method:'DELETE' });
+      if(!res.ok) throw new Error('Delete failed');
+      openRow = null;
+      await loadTenders();
+    }catch(err){
+      alert('Could not delete tender. Please try again.');
+    }
   }
 
   function render(){
@@ -192,31 +274,39 @@
     renderTable();
   }
 
-  document.getElementById('searchInput').addEventListener('input', e => {
-    searchTerm = e.target.value;
-    openRow = null;
+  async function loadTenders(){
+    const res = await fetch('/api/tenders');
+    if(res.status === 401){ window.location.href = '/login'; return; }
+    RAW = await res.json();
     render();
-  });
-  document.getElementById('sortSelect').addEventListener('change', e => {
-    sortMode = e.target.value;
-    render();
-  });
-
-  document.getElementById('asof').textContent = TODAY.toLocaleDateString('en-GB',{day:'2-digit',month:'long',year:'numeric'});
-
-  async function load(){
-    const ledger = document.getElementById('ledger');
-    ledger.innerHTML = '<div class="empty">Loading tenders…</div>';
-    try{
-      const res = await fetch('/api/tenders');
-      if(!res.ok) throw new Error('Request failed: ' + res.status);
-      RAW = await res.json();
-      render();
-    }catch(err){
-      ledger.innerHTML = '<div class="empty">Could not load tenders. Try refreshing the page.</div>';
-      console.error(err);
-    }
   }
 
-  load();
+  async function init(){
+    const who = await fetch('/api/whoami');
+    if(who.status === 401){ window.location.href = '/login'; return; }
+    const whoData = await who.json();
+    ROLE = whoData.role;
+
+    const roleLabel = ROLE === 'admin' ? 'Admin (full access)' : ROLE === 'entry' ? 'Entry (add/edit)' : ROLE;
+    document.getElementById('roleTag').textContent = `Signed in as: ${roleLabel}`;
+    if(canWrite()){
+      document.getElementById('addBtn').style.display = 'inline-block';
+    }
+
+    document.getElementById('asof').textContent = new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'long',year:'numeric'});
+
+    document.getElementById('searchInput').addEventListener('input', e => {
+      searchTerm = e.target.value;
+      openRow = null;
+      render();
+    });
+    document.getElementById('sortSelect').addEventListener('change', e => {
+      sortMode = e.target.value;
+      render();
+    });
+
+    await loadTenders();
+  }
+
+  init();
 })();
