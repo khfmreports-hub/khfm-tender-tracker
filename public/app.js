@@ -288,7 +288,8 @@
     ROLE = whoData.role;
 
     const roleLabel = ROLE === 'admin' ? 'Admin (full access)' : ROLE === 'entry' ? 'Entry (add/edit)' : ROLE;
-    document.getElementById('roleTag').textContent = `Signed in as: ${roleLabel}`;
+    const manageLink = ROLE === 'admin' ? ' · <a href="/manage" style="color:rgba(247,243,233,0.6);">Manage</a>' : '';
+    document.getElementById('roleTag').innerHTML = `Signed in as: ${roleLabel}${manageLink}`;
     if(canWrite()){
       document.getElementById('addBtn').style.display = 'inline-block';
     }

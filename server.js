@@ -5,8 +5,6 @@ const db = require('./db');
 
 const app = express();
 const PORT = process.env.PORT || 10000;
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'admin2026';
-const ENTRY_PASSWORD = process.env.ENTRY_PASSWORD || 'entry2026';
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -62,17 +60,24 @@ app.get('/login', (req, res) => {
 </body></html>`);
 });
 
-app.post('/login', (req, res) => {
+app.post('/login', async (req, res) => {
   const pw = req.body.password;
-  if (pw === ADMIN_PASSWORD) {
-    req.session.role = 'admin';
-    return res.redirect('/');
+  try {
+    const adminPw = await db.getSetting('admin_password');
+    const entryPw = await db.getSetting('entry_password');
+    if (pw === adminPw) {
+      req.session.role = 'admin';
+      return res.redirect('/');
+    }
+    if (pw === entryPw) {
+      req.session.role = 'entry';
+      return res.redirect('/');
+    }
+    res.redirect('/login?error=1');
+  } catch (e) {
+    console.error(e);
+    res.redirect('/login?error=1');
   }
-  if (pw === ENTRY_PASSWORD) {
-    req.session.role = 'entry';
-    return res.redirect('/');
-  }
-  res.redirect('/login?error=1');
 });
 
 app.get('/logout', (req, res) => {
@@ -81,6 +86,64 @@ app.get('/logout', (req, res) => {
 
 app.get('/api/whoami', requireApiAuth, (req, res) => {
   res.json({ role: req.session.role });
+});
+
+// ---------- Manage (admin only) ----------
+function requireAdminPage(req, res, next) {
+  if (req.session && req.session.role === 'admin') return next();
+  return res.redirect('/login');
+}
+
+app.get('/manage', requireAdminPage, (req, res) => {
+  const msg = req.query.saved ? '<p class="ok">Passwords updated.</p>' : '';
+  const err = req.query.error ? '<p class="err">Both fields are required, and they must be different from each other.</p>' : '';
+  res.send(`<!DOCTYPE html>
+<html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Manage — KHFM Tender Tracker</title>
+<style>
+  body{font-family:Arial,Helvetica,sans-serif;background:#0F2036;color:#F7F3E9;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;padding:20px;}
+  .box{background:#16304D;padding:36px;border-radius:8px;width:100%;max-width:420px;box-shadow:0 20px 50px rgba(0,0,0,0.35);}
+  h1{font-size:19px;margin:0 0 6px;font-weight:700;}
+  .sub{font-size:12.5px;color:rgba(247,243,233,0.55);margin:0 0 22px;}
+  label{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:rgba(247,243,233,0.55);margin-bottom:5px;margin-top:16px;}
+  input[type=text],input[type=password]{width:100%;padding:10px;border-radius:4px;border:1px solid rgba(247,243,233,0.25);box-sizing:border-box;background:#0F2036;color:#F7F3E9;font-size:14px;}
+  input:focus{outline:2px solid #C9962C;}
+  button{width:100%;padding:11px;background:#C9962C;border:none;border-radius:4px;color:#0F2036;font-weight:700;cursor:pointer;font-size:14px;margin-top:22px;}
+  button:hover{background:#D9A93B;}
+  .ok{color:#79C295;font-size:12.5px;margin:0 0 8px;}
+  .err{color:#E08A82;font-size:12.5px;margin:0 0 8px;}
+  .back{display:inline-block;margin-top:16px;color:rgba(247,243,233,0.55);font-size:12.5px;text-decoration:none;}
+  .back:hover{color:#F7F3E9;}
+</style></head>
+<body>
+  <div class="box">
+    <h1>Manage Access</h1>
+    <p class="sub">Set the passwords for the two tracker logins.</p>
+    ${msg}${err}
+    <form method="POST" action="/manage/update-passwords">
+      <label>Admin Password</label>
+      <input type="text" name="adminPassword" required>
+      <label>Entry Password</label>
+      <input type="text" name="entryPassword" required>
+      <button type="submit">Save Passwords</button>
+    </form>
+    <a class="back" href="/">&larr; Back to dashboard</a>
+  </div>
+</body></html>`);
+});
+
+app.post('/manage/update-passwords', requireAdminPage, async (req, res) => {
+  const { adminPassword, entryPassword } = req.body;
+  if (!adminPassword || !entryPassword || adminPassword === entryPassword) {
+    return res.redirect('/manage?error=1');
+  }
+  try {
+    await db.setSetting('admin_password', adminPassword);
+    await db.setSetting('entry_password', entryPassword);
+    res.redirect('/manage?saved=1');
+  } catch (e) {
+    console.error(e);
+    res.redirect('/manage?error=1');
+  }
 });
 
 // ---------- Tender API ----------

@@ -29,6 +29,32 @@ async function init() {
     );
   `);
 
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS settings (
+      key TEXT PRIMARY KEY,
+      value TEXT NOT NULL,
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+    );
+  `);
+
+  // Seed password settings from env vars on first run only.
+  // After this, the database is the source of truth so passwords can be
+  // changed at runtime from the Manage page without redeploying.
+  const { rows: existing } = await pool.query(
+    "SELECT key FROM settings WHERE key IN ('admin_password','entry_password')"
+  );
+  const have = new Set(existing.map(r => r.key));
+  if (!have.has('admin_password')) {
+    await pool.query('INSERT INTO settings (key, value) VALUES ($1,$2)', [
+      'admin_password', process.env.ADMIN_PASSWORD || 'admin2026',
+    ]);
+  }
+  if (!have.has('entry_password')) {
+    await pool.query('INSERT INTO settings (key, value) VALUES ($1,$2)', [
+      'entry_password', process.env.ENTRY_PASSWORD || 'entry2026',
+    ]);
+  }
+
   const { rows } = await pool.query('SELECT COUNT(*)::int AS n FROM tenders');
   if (rows[0].n === 0) {
     const seedPath = path.join(__dirname, 'seed_data.json');
@@ -44,6 +70,19 @@ async function init() {
       console.log(`Seeded ${seed.length} tenders.`);
     }
   }
+}
+
+async function getSetting(key) {
+  const { rows } = await pool.query('SELECT value FROM settings WHERE key = $1', [key]);
+  return rows[0] ? rows[0].value : null;
+}
+
+async function setSetting(key, value) {
+  await pool.query(
+    `INSERT INTO settings (key, value, updated_at) VALUES ($1,$2, now())
+     ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, updated_at = now()`,
+    [key, value]
+  );
 }
 
 function rowToApi(r) {
@@ -124,4 +163,4 @@ async function deleteTender(id) {
   return rowCount > 0;
 }
 
-module.exports = { pool, init, listTenders, createTender, updateTender, deleteTender };
+module.exports = { pool, init, listTenders, createTender, updateTender, deleteTender, getSetting, setSetting };
