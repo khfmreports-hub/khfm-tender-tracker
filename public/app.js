@@ -37,6 +37,54 @@
     const today = new Date(); today.setHours(0,0,0,0);
     return Math.round((dt - today)/86400000);
   }
+  function fmtSize(bytes){
+    if(bytes < 1024) return bytes + ' B';
+    if(bytes < 1024*1024) return (bytes/1024).toFixed(0) + ' KB';
+    return (bytes/(1024*1024)).toFixed(1) + ' MB';
+  }
+
+  async function fetchAttachments(tenderId){
+    const res = await fetch(`/api/tenders/${tenderId}/attachments`);
+    if(!res.ok) return [];
+    return res.json();
+  }
+
+  function renderAttachList(container, tenderId, list, allowDelete){
+    if(list.length === 0){
+      container.innerHTML = '<span class="attach-empty">No documents uploaded yet.</span>';
+      return;
+    }
+    container.innerHTML = list.map(a => `
+      <div class="attach-item" data-att="${a.id}">
+        <div>
+          <a href="/api/attachments/${a.id}/download" target="_blank" rel="noopener">${escapeHtml(a.filename)}</a>
+          <div class="meta">${fmtSize(a.sizeBytes)} · ${new Date(a.uploadedAt).toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'})}</div>
+        </div>
+        ${allowDelete ? `<button class="del" data-att-del="${a.id}">Remove</button>` : ''}
+      </div>
+    `).join('');
+    if(allowDelete){
+      container.querySelectorAll('[data-att-del]').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          if(!confirm('Remove this document?')) return;
+          try{
+            const res = await fetch(`/api/attachments/${btn.dataset.attDel}`, { method:'DELETE' });
+            if(!res.ok) throw new Error('failed');
+            const list = await fetchAttachments(tenderId);
+            renderAttachList(container, tenderId, list, allowDelete);
+          }catch(err){
+            alert('Could not remove document.');
+          }
+        });
+      });
+    }
+  }
+
+  async function loadAttachmentsInto(tenderId, container){
+    const list = await fetchAttachments(tenderId);
+    renderAttachList(container, tenderId, list, canWrite());
+  }
+
   function escapeHtml(s){
     if(s===null||s===undefined) return '';
     return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -107,6 +155,7 @@
       <div>Sr</div>
       <div>Organisation</div>
       <div>Scope of Work</div>
+      <div>Entered</div>
       <div>Due</div>
       <div>Estimate</div>
       <div>Status</div>
@@ -140,6 +189,9 @@
           <span class="tender-id">${escapeHtml(r.tenderId||'—')}</span>
         </div>
         <div class="c-work">${escapeHtml(truncate(r.work,110))}</div>
+        <div class="c-entered">
+          <span class="d">${fmtDate(r.enteredDate)}</span>
+        </div>
         <div class="c-due">
           <span class="d">${fmtDate(r.due)}</span>
           ${tag}
@@ -183,10 +235,17 @@
                 <h4>Financials</h4>
                 <p>Estimate: ${fmtMoney(r.estimate)} &nbsp;·&nbsp; EMD: ${fmtMoney(r.emd)}</p>
               </div>
+              <div style="grid-column:1/-1;">
+                <h4>Price Bid Documents</h4>
+                <div class="attach-list-inline" data-tender="${r.id}">
+                  <span class="attach-empty">Loading…</span>
+                </div>
+              </div>
             </div>
           </div>
         `;
         ledger.appendChild(detail);
+        loadAttachmentsInto(r.id, detail.querySelector('.attach-list-inline'));
       }
     });
 
@@ -211,12 +270,44 @@
     document.getElementById('f-tenderId').value = record ? (record.tenderId||'') : '';
     document.getElementById('f-due').value = record ? (record.due||'') : '';
     document.getElementById('f-status').value = record ? record.status : 'Pending';
+    document.getElementById('f-enteredDate').value = record ? (record.enteredDate||'') : new Date().toISOString().slice(0,10);
     document.getElementById('f-work').value = record ? (record.work||'') : '';
     document.getElementById('f-estimate').value = record && record.estimate !== null ? record.estimate : '';
     document.getElementById('f-emd').value = record && record.emd !== null ? record.emd : '';
+    document.getElementById('f-emdDue').value = record ? (record.emdDue||'') : '';
+    document.getElementById('f-emdPaid').value = record && record.emdPaid ? 'true' : 'false';
     document.getElementById('f-emdType').value = record ? (record.emdType||'') : '';
     document.getElementById('f-note').value = record ? (record.note||'') : '';
     document.getElementById('f-statusDetail').value = record ? (record.statusDetail||'') : '';
+
+    const attachSection = document.getElementById('attachSection');
+    const attachList = document.getElementById('attachList');
+    if(record && record.id){
+      attachSection.style.display = '';
+      attachList.innerHTML = '<span class="attach-empty">Loading…</span>';
+      loadAttachmentsInto(record.id, attachList);
+      document.getElementById('attachUploadBtn').onclick = async () => {
+        const fileInput = document.getElementById('attachFileInput');
+        if(!fileInput.files[0]){ alert('Choose a PDF or Excel file first.'); return; }
+        const fd = new FormData();
+        fd.append('file', fileInput.files[0]);
+        try{
+          const res = await fetch(`/api/tenders/${record.id}/attachments`, { method:'POST', body: fd });
+          if(!res.ok){
+            const err = await res.json().catch(()=>({}));
+            throw new Error(err.error || 'Upload failed');
+          }
+          fileInput.value = '';
+          const list = await fetchAttachments(record.id);
+          renderAttachList(attachList, record.id, list, canWrite());
+        }catch(err){
+          alert(err.message || 'Could not upload file.');
+        }
+      };
+    } else {
+      attachSection.style.display = 'none';
+    }
+
     modalBackdrop.classList.add('open');
   }
   function closeModal(){
@@ -236,9 +327,12 @@
       tenderId: document.getElementById('f-tenderId').value,
       due: document.getElementById('f-due').value || null,
       status: document.getElementById('f-status').value,
+      enteredDate: document.getElementById('f-enteredDate').value || null,
       work: document.getElementById('f-work').value,
       estimate: document.getElementById('f-estimate').value ? Number(document.getElementById('f-estimate').value) : null,
       emd: document.getElementById('f-emd').value ? Number(document.getElementById('f-emd').value) : null,
+      emdDue: document.getElementById('f-emdDue').value || null,
+      emdPaid: document.getElementById('f-emdPaid').value === 'true',
       emdType: document.getElementById('f-emdType').value,
       note: document.getElementById('f-note').value,
       statusDetail: document.getElementById('f-statusDetail').value,
@@ -272,7 +366,110 @@
   function render(){
     renderStats();
     renderTable();
+    renderEmdTable();
   }
+
+  function emdDaysDiff(d){
+    if(!d) return null;
+    const dt = new Date(d+'T00:00:00');
+    const today = new Date(); today.setHours(0,0,0,0);
+    return Math.round((dt - today)/86400000);
+  }
+
+  async function toggleEmdPaid(id, newVal){
+    try{
+      const res = await fetch(`/api/tenders/${id}/emd-paid`, {
+        method: 'PATCH',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ emdPaid: newVal })
+      });
+      if(!res.ok) throw new Error('failed');
+      await loadTenders();
+    }catch(err){
+      alert('Could not update EMD status. Please try again.');
+    }
+  }
+
+  function renderEmdTable(){
+    const emdLedger = document.getElementById('emdLedger');
+    if(!emdLedger) return;
+    emdLedger.innerHTML = '';
+
+    const rows = RAW.filter(r => r.emd !== null && r.emd !== undefined);
+
+    const head = document.createElement('div');
+    head.className = 'emd-row head';
+    head.innerHTML = `
+      <div>Organisation</div>
+      <div>Tender Due</div>
+      <div>EMD Due</div>
+      <div>EMD Amount</div>
+      <div>EMD Status</div>
+      <div>Overdue</div>
+    `;
+    emdLedger.appendChild(head);
+
+    if(rows.length === 0){
+      const e = document.createElement('div');
+      e.className = 'empty';
+      e.textContent = 'No tenders with an EMD amount recorded yet.';
+      emdLedger.appendChild(e);
+      return;
+    }
+
+    const sorted = rows.slice().sort((a,b) => (a.emdDue||'9999').localeCompare(b.emdDue||'9999'));
+
+    sorted.forEach(r => {
+      const dd = emdDaysDiff(r.emdDue);
+      let odHtml = '<span class="emd-od ok">—</span>';
+      if(!r.emdPaid && dd !== null){
+        if(dd < 0) odHtml = `<span class="emd-od bad">${Math.abs(dd)} days</span>`;
+        else odHtml = `<span class="emd-od ok">Due in ${dd}d</span>`;
+      }
+
+      const row = document.createElement('div');
+      row.className = 'emd-row';
+      row.innerHTML = `
+        <div>
+          <span class="org-name">${escapeHtml(r.org||'—')}</span>
+          <span class="tender-id">${escapeHtml(r.tenderId||'—')}</span>
+        </div>
+        <div>${fmtDate(r.due)}</div>
+        <div>${fmtDate(r.emdDue)}</div>
+        <div class="amt">${fmtMoney(r.emd)}</div>
+        <div>
+          <button class="emd-pill ${r.emdPaid ? 'paid':'unpaid'}" data-id="${r.id}" data-paid="${r.emdPaid ? '1':'0'}" ${canWrite() ? '' : 'disabled'}>
+            ${r.emdPaid ? 'Paid' : 'Unpaid'}
+          </button>
+        </div>
+        <div>${odHtml}</div>
+      `;
+      emdLedger.appendChild(row);
+    });
+
+    if(canWrite()){
+      emdLedger.querySelectorAll('.emd-pill').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const current = btn.dataset.paid === '1';
+          toggleEmdPaid(btn.dataset.id, !current);
+        });
+      });
+    }
+  }
+
+  // ---------- Tabs ----------
+  document.getElementById('tabDashboard').addEventListener('click', () => {
+    document.getElementById('tabDashboard').classList.add('active');
+    document.getElementById('tabEmd').classList.remove('active');
+    document.getElementById('dashboardView').style.display = '';
+    document.getElementById('emdView').style.display = 'none';
+  });
+  document.getElementById('tabEmd').addEventListener('click', () => {
+    document.getElementById('tabEmd').classList.add('active');
+    document.getElementById('tabDashboard').classList.remove('active');
+    document.getElementById('dashboardView').style.display = 'none';
+    document.getElementById('emdView').style.display = '';
+  });
 
   async function loadTenders(){
     const res = await fetch('/api/tenders');

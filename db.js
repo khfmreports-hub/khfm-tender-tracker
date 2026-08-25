@@ -21,11 +21,30 @@ async function init() {
       estimate NUMERIC,
       emd NUMERIC,
       emd_type TEXT,
+      emd_due DATE,
+      emd_paid BOOLEAN NOT NULL DEFAULT false,
       note TEXT,
       status TEXT NOT NULL DEFAULT 'Pending',
       status_detail TEXT,
       created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
       updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+    );
+  `);
+
+  // Migrate older deployments that created the table before these columns existed.
+  await pool.query(`ALTER TABLE tenders ADD COLUMN IF NOT EXISTS emd_due DATE;`);
+  await pool.query(`ALTER TABLE tenders ADD COLUMN IF NOT EXISTS emd_paid BOOLEAN NOT NULL DEFAULT false;`);
+  await pool.query(`ALTER TABLE tenders ADD COLUMN IF NOT EXISTS entered_date DATE;`);
+
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS attachments (
+      id SERIAL PRIMARY KEY,
+      tender_id INTEGER NOT NULL REFERENCES tenders(id) ON DELETE CASCADE,
+      filename TEXT NOT NULL,
+      mimetype TEXT NOT NULL,
+      size_bytes INTEGER NOT NULL,
+      data BYTEA NOT NULL,
+      uploaded_at TIMESTAMPTZ NOT NULL DEFAULT now()
     );
   `);
 
@@ -96,6 +115,9 @@ function rowToApi(r) {
     estimate: r.estimate !== null ? Number(r.estimate) : null,
     emd: r.emd !== null ? Number(r.emd) : null,
     emdType: r.emd_type,
+    emdDue: r.emd_due ? new Date(r.emd_due).toISOString().slice(0, 10) : null,
+    emdPaid: !!r.emd_paid,
+    enteredDate: r.entered_date ? new Date(r.entered_date).toISOString().slice(0, 10) : null,
     note: r.note,
     status: r.status,
     statusDetail: r.status_detail,
@@ -115,8 +137,8 @@ async function nextSr() {
 async function createTender(data) {
   const sr = await nextSr();
   const { rows } = await pool.query(
-    `INSERT INTO tenders (sr, org, tender_id, due, work, estimate, emd, emd_type, note, status, status_detail)
-     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11) RETURNING *`,
+    `INSERT INTO tenders (sr, org, tender_id, due, work, estimate, emd, emd_type, emd_due, emd_paid, entered_date, note, status, status_detail)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14) RETURNING *`,
     [
       sr,
       data.org || null,
@@ -126,6 +148,9 @@ async function createTender(data) {
       data.estimate ?? null,
       data.emd ?? null,
       data.emdType || null,
+      data.emdDue || null,
+      !!data.emdPaid,
+      data.enteredDate || null,
       data.note || null,
       data.status || 'Pending',
       data.statusDetail || null,
@@ -138,9 +163,9 @@ async function updateTender(id, data) {
   const { rows } = await pool.query(
     `UPDATE tenders SET
        org = $1, tender_id = $2, due = $3, work = $4, estimate = $5,
-       emd = $6, emd_type = $7, note = $8, status = $9, status_detail = $10,
+       emd = $6, emd_type = $7, emd_due = $8, emd_paid = $9, entered_date = $10, note = $11, status = $12, status_detail = $13,
        updated_at = now()
-     WHERE id = $11 RETURNING *`,
+     WHERE id = $14 RETURNING *`,
     [
       data.org || null,
       data.tenderId || null,
@@ -149,6 +174,9 @@ async function updateTender(id, data) {
       data.estimate ?? null,
       data.emd ?? null,
       data.emdType || null,
+      data.emdDue || null,
+      !!data.emdPaid,
+      data.enteredDate || null,
       data.note || null,
       data.status || 'Pending',
       data.statusDetail || null,
@@ -163,4 +191,46 @@ async function deleteTender(id) {
   return rowCount > 0;
 }
 
-module.exports = { pool, init, listTenders, createTender, updateTender, deleteTender, getSetting, setSetting };
+// ---------- Attachments ----------
+async function listAttachments(tenderId) {
+  const { rows } = await pool.query(
+    'SELECT id, tender_id, filename, mimetype, size_bytes, uploaded_at FROM attachments WHERE tender_id = $1 ORDER BY uploaded_at DESC',
+    [tenderId]
+  );
+  return rows.map(r => ({
+    id: r.id,
+    tenderId: r.tender_id,
+    filename: r.filename,
+    mimetype: r.mimetype,
+    sizeBytes: r.size_bytes,
+    uploadedAt: r.uploaded_at,
+  }));
+}
+
+async function addAttachment(tenderId, file) {
+  const { rows } = await pool.query(
+    `INSERT INTO attachments (tender_id, filename, mimetype, size_bytes, data)
+     VALUES ($1,$2,$3,$4,$5) RETURNING id, tender_id, filename, mimetype, size_bytes, uploaded_at`,
+    [tenderId, file.originalname, file.mimetype, file.size, file.buffer]
+  );
+  const r = rows[0];
+  return {
+    id: r.id, tenderId: r.tender_id, filename: r.filename,
+    mimetype: r.mimetype, sizeBytes: r.size_bytes, uploadedAt: r.uploaded_at,
+  };
+}
+
+async function getAttachmentFile(attId) {
+  const { rows } = await pool.query('SELECT * FROM attachments WHERE id = $1', [attId]);
+  return rows[0] || null;
+}
+
+async function deleteAttachment(attId) {
+  const { rowCount } = await pool.query('DELETE FROM attachments WHERE id = $1', [attId]);
+  return rowCount > 0;
+}
+
+module.exports = {
+  pool, init, listTenders, createTender, updateTender, deleteTender, getSetting, setSetting,
+  listAttachments, addAttachment, getAttachmentFile, deleteAttachment,
+};

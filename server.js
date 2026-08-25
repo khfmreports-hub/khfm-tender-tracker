@@ -1,7 +1,22 @@
 const express = require('express');
 const session = require('express-session');
 const path = require('path');
+const multer = require('multer');
 const db = require('./db');
+
+const ALLOWED_MIMETYPES = new Set([
+  'application/pdf',
+  'application/vnd.ms-excel',
+  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+]);
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 15 * 1024 * 1024 }, // 15MB
+  fileFilter: (req, file, cb) => {
+    if (ALLOWED_MIMETYPES.has(file.mimetype)) return cb(null, true);
+    cb(new Error('Only PDF and Excel (.xls/.xlsx) files are allowed'));
+  },
+});
 
 const app = express();
 const PORT = process.env.PORT || 10000;
@@ -178,6 +193,19 @@ app.put('/api/tenders/:id', requireWriteApi, async (req, res) => {
   }
 });
 
+app.patch('/api/tenders/:id/emd-paid', requireWriteApi, async (req, res) => {
+  try {
+    const tenders = await db.listTenders();
+    const existing = tenders.find(t => String(t.id) === String(req.params.id));
+    if (!existing) return res.status(404).json({ error: 'Not found' });
+    const updated = await db.updateTender(req.params.id, { ...existing, emdPaid: !!req.body.emdPaid });
+    res.json(updated);
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: 'Failed to update EMD status' });
+  }
+});
+
 app.delete('/api/tenders/:id', requireAdminApi, async (req, res) => {
   try {
     const ok = await db.deleteTender(req.params.id);
@@ -186,6 +214,55 @@ app.delete('/api/tenders/:id', requireAdminApi, async (req, res) => {
   } catch (e) {
     console.error(e);
     res.status(500).json({ error: 'Failed to delete tender' });
+  }
+});
+
+// ---------- Price bid attachments (PDF / Excel) ----------
+app.get('/api/tenders/:id/attachments', requireApiAuth, async (req, res) => {
+  try {
+    const list = await db.listAttachments(req.params.id);
+    res.json(list);
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: 'Failed to load attachments' });
+  }
+});
+
+app.post('/api/tenders/:id/attachments', requireWriteApi, (req, res) => {
+  upload.single('file')(req, res, async (err) => {
+    if (err) return res.status(400).json({ error: err.message });
+    if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
+    try {
+      const saved = await db.addAttachment(req.params.id, req.file);
+      res.status(201).json(saved);
+    } catch (e) {
+      console.error(e);
+      res.status(500).json({ error: 'Failed to save attachment' });
+    }
+  });
+});
+
+app.get('/api/attachments/:attId/download', requireApiAuth, async (req, res) => {
+  try {
+    const file = await db.getAttachmentFile(req.params.attId);
+    if (!file) return res.status(404).send('Not found');
+    res.setHeader('Content-Type', file.mimetype);
+    res.setHeader('Content-Disposition', `attachment; filename="${encodeURIComponent(file.filename)}"`);
+    res.send(file.data);
+  } catch (e) {
+    console.error(e);
+    res.status(500).send('Failed to download file');
+  }
+});
+
+app.delete('/api/attachments/:attId', requireWriteApi, async (req, res) => {
+  try {
+    const ok = await db.deleteAttachment(req.params.attId);
+    if (!ok) return res.status(404).json({ error: 'Not found' });
+    res.json({ success: true });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: 'Failed to delete attachment' });
   }
 });
 
