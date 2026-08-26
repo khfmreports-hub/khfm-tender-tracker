@@ -353,22 +353,27 @@
 
     const attachSection = document.getElementById('attachSection');
     const attachList = document.getElementById('attachList');
+    const attachUploadBtn = document.getElementById('attachUploadBtn');
+    const attachFileInput = document.getElementById('attachFileInput');
+    attachFileInput.value = '';
+
+    attachSection.style.display = '';
     if(record && record.id){
-      attachSection.style.display = '';
       attachList.innerHTML = '<span class="attach-empty">Loading…</span>';
       loadAttachmentsInto(record.id, attachList);
-      document.getElementById('attachUploadBtn').onclick = async () => {
-        const fileInput = document.getElementById('attachFileInput');
-        if(!fileInput.files[0]){ alert('Choose a PDF or Excel file first.'); return; }
+      attachUploadBtn.style.display = '';
+      attachUploadBtn.textContent = 'Upload File';
+      attachUploadBtn.onclick = async () => {
+        if(!attachFileInput.files[0]){ alert('Choose a PDF or Excel file first.'); return; }
         const fd = new FormData();
-        fd.append('file', fileInput.files[0]);
+        fd.append('file', attachFileInput.files[0]);
         try{
           const res = await fetch(`/api/tenders/${record.id}/attachments`, { method:'POST', body: fd });
           if(!res.ok){
             const err = await res.json().catch(()=>({}));
             throw new Error(err.error || 'Upload failed');
           }
-          fileInput.value = '';
+          attachFileInput.value = '';
           const list = await fetchAttachments(record.id);
           renderAttachList(attachList, record.id, list, canWrite());
         }catch(err){
@@ -376,7 +381,8 @@
         }
       };
     } else {
-      attachSection.style.display = 'none';
+      attachList.innerHTML = '<span class="attach-empty">Choose a file below — it will be uploaded once you save this tender.</span>';
+      attachUploadBtn.style.display = 'none';
     }
 
     modalBackdrop.classList.add('open');
@@ -415,6 +421,26 @@
         body: JSON.stringify(payload)
       });
       if(!res.ok) throw new Error('Save failed');
+      const saved = await res.json();
+
+      // For a brand-new tender, upload the picked price bid file (if any) now that we have an id.
+      if(!id){
+        const attachFileInput = document.getElementById('attachFileInput');
+        if(attachFileInput.files[0]){
+          const fd = new FormData();
+          fd.append('file', attachFileInput.files[0]);
+          try{
+            const upRes = await fetch(`/api/tenders/${saved.id}/attachments`, { method:'POST', body: fd });
+            if(!upRes.ok){
+              const err = await upRes.json().catch(()=>({}));
+              throw new Error(err.error || 'Upload failed');
+            }
+          }catch(upErr){
+            alert('Tender was saved, but the price bid file could not be uploaded: ' + (upErr.message || 'unknown error'));
+          }
+        }
+      }
+
       closeModal();
       await loadTenders();
     }catch(err){
