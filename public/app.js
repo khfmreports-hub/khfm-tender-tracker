@@ -139,6 +139,40 @@
   const canWrite = () => ROLE === 'admin' || ROLE === 'entry';
   const canDelete = () => ROLE === 'admin';
 
+  const MOBILE_BREAKPOINT = 760;
+  const isMobile = () => window.innerWidth <= MOBILE_BREAKPOINT;
+
+  function detailHtml(r){
+    return `
+      <div class="detail" style="display:block;">
+        <div class="grid">
+          <div>
+            <h4>Full Scope of Work</h4>
+            <p>${escapeHtml(r.work||'—')}</p>
+          </div>
+          <div>
+            <h4>Status Detail / Filing Note</h4>
+            <p>${escapeHtml([r.note, r.statusDetail].filter(Boolean).join(' — ') || 'No update recorded yet.')}</p>
+          </div>
+          <div>
+            <h4>EMD / Eligibility Note</h4>
+            <p>${escapeHtml(truncate(r.emdType,400) || '—')}</p>
+          </div>
+          <div>
+            <h4>Financials</h4>
+            <p>Estimate: ${fmtMoney(r.estimate)} &nbsp;·&nbsp; EMD: ${fmtMoney(r.emd)}</p>
+          </div>
+          <div style="grid-column:1/-1;">
+            <h4>Price Bid Documents</h4>
+            <div class="attach-list-inline" data-tender="${r.id}">
+              <span class="attach-empty">Loading…</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
   function renderTable(){
     const filtered = sortRows(RAW.filter(matches));
     document.getElementById('countShown').textContent = filtered.length;
@@ -148,6 +182,19 @@
     ledger.innerHTML = '';
 
     const withActions = canWrite();
+
+    if(filtered.length === 0){
+      const e = document.createElement('div');
+      e.className = 'empty';
+      e.textContent = RAW.length === 0 ? 'No tenders logged yet.' : 'No tenders match this filter.';
+      ledger.appendChild(e);
+      return;
+    }
+
+    if(isMobile()){
+      renderTableMobile(ledger, filtered, withActions);
+      return;
+    }
 
     const head = document.createElement('div');
     head.className = 'row head' + (withActions ? ' hasactions' : '');
@@ -162,14 +209,6 @@
       ${withActions ? '<div>Actions</div>' : ''}
     `;
     ledger.appendChild(head);
-
-    if(filtered.length === 0){
-      const e = document.createElement('div');
-      e.className = 'empty';
-      e.textContent = RAW.length === 0 ? 'No tenders logged yet.' : 'No tenders match this filter.';
-      ledger.appendChild(e);
-      return;
-    }
 
     filtered.forEach(r => {
       const meta = STATUS_META[r.status] || STATUS_META['Pending'];
@@ -216,34 +255,66 @@
       if(openRow === r.id){
         const detail = document.createElement('div');
         detail.className = 'row open';
-        detail.innerHTML = `
-          <div class="detail" style="display:block;">
-            <div class="grid">
-              <div>
-                <h4>Full Scope of Work</h4>
-                <p>${escapeHtml(r.work||'—')}</p>
-              </div>
-              <div>
-                <h4>Status Detail / Filing Note</h4>
-                <p>${escapeHtml([r.note, r.statusDetail].filter(Boolean).join(' — ') || 'No update recorded yet.')}</p>
-              </div>
-              <div>
-                <h4>EMD / Eligibility Note</h4>
-                <p>${escapeHtml(truncate(r.emdType,400) || '—')}</p>
-              </div>
-              <div>
-                <h4>Financials</h4>
-                <p>Estimate: ${fmtMoney(r.estimate)} &nbsp;·&nbsp; EMD: ${fmtMoney(r.emd)}</p>
-              </div>
-              <div style="grid-column:1/-1;">
-                <h4>Price Bid Documents</h4>
-                <div class="attach-list-inline" data-tender="${r.id}">
-                  <span class="attach-empty">Loading…</span>
-                </div>
-              </div>
-            </div>
+        detail.innerHTML = detailHtml(r);
+        ledger.appendChild(detail);
+        loadAttachmentsInto(r.id, detail.querySelector('.attach-list-inline'));
+      }
+    });
+
+    if(withActions){
+      ledger.querySelectorAll('.btn-edit').forEach(btn => {
+        btn.addEventListener('click', () => openModal(RAW.find(r => String(r.id) === btn.dataset.id)));
+      });
+      ledger.querySelectorAll('.btn-delete').forEach(btn => {
+        btn.addEventListener('click', () => deleteTender(btn.dataset.id));
+      });
+    }
+  }
+
+  function renderTableMobile(ledger, filtered, withActions){
+    filtered.forEach(r => {
+      const meta = STATUS_META[r.status] || STATUS_META['Pending'];
+      const dd = daysDiff(r.due);
+      let tag = '';
+      if(dd !== null && r.status === 'Pending'){
+        if(dd < 0) tag = ` <span class="tag overdue">Overdue ${Math.abs(dd)}d</span>`;
+        else if(dd <= 14) tag = ` <span class="tag soon">In ${dd}d</span>`;
+      }
+
+      const card = document.createElement('div');
+      card.className = 'tcard';
+      card.innerHTML = `
+        <div class="tcard-top">
+          <div class="tcard-title">
+            <span class="org-name">${escapeHtml(r.org||'—')}</span>
+            <span class="tender-id">${escapeHtml(r.tenderId||'—')}</span>
           </div>
-        `;
+          <span class="stamp ${meta.cls}">${meta.label}</span>
+        </div>
+        <div class="tcard-work">${escapeHtml(truncate(r.work,140))}</div>
+        <div class="tcard-meta">
+          <div><span class="m-lbl">Entered</span><span class="m-val">${fmtDate(r.enteredDate)}</span></div>
+          <div><span class="m-lbl">Due</span><span class="m-val">${fmtDate(r.due)}${tag}</span></div>
+          <div><span class="m-lbl">Estimate</span><span class="m-val">${fmtMoney(r.estimate)}</span></div>
+          <div><span class="m-lbl">EMD</span><span class="m-val">${fmtMoney(r.emd)}</span></div>
+        </div>
+        ${withActions ? `<div class="tcard-actions">
+            <button class="btn-edit" data-id="${r.id}">Edit</button>
+            ${canDelete() ? `<button class="btn-delete" data-id="${r.id}">Delete</button>` : ''}
+          </div>` : ''}
+      `;
+      card.addEventListener('click', (e) => {
+        if(e.target.closest('.tcard-actions')) return;
+        openRow = (openRow === r.id) ? null : r.id;
+        renderTable();
+      });
+      ledger.appendChild(card);
+
+      if(openRow === r.id){
+        const detail = document.createElement('div');
+        detail.className = 'tcard';
+        detail.style.paddingTop = '0';
+        detail.innerHTML = detailHtml(r);
         ledger.appendChild(detail);
         loadAttachmentsInto(r.id, detail.querySelector('.attach-list-inline'));
       }
@@ -397,6 +468,21 @@
 
     const rows = RAW.filter(r => r.emd !== null && r.emd !== undefined);
 
+    if(rows.length === 0){
+      const e = document.createElement('div');
+      e.className = 'empty';
+      e.textContent = 'No tenders with an EMD amount recorded yet.';
+      emdLedger.appendChild(e);
+      return;
+    }
+
+    const sorted = rows.slice().sort((a,b) => (a.emdDue||'9999').localeCompare(b.emdDue||'9999'));
+
+    if(isMobile()){
+      renderEmdTableMobile(emdLedger, sorted);
+      return;
+    }
+
     const head = document.createElement('div');
     head.className = 'emd-row head';
     head.innerHTML = `
@@ -408,16 +494,6 @@
       <div>Overdue</div>
     `;
     emdLedger.appendChild(head);
-
-    if(rows.length === 0){
-      const e = document.createElement('div');
-      e.className = 'empty';
-      e.textContent = 'No tenders with an EMD amount recorded yet.';
-      emdLedger.appendChild(e);
-      return;
-    }
-
-    const sorted = rows.slice().sort((a,b) => (a.emdDue||'9999').localeCompare(b.emdDue||'9999'));
 
     sorted.forEach(r => {
       const dd = emdDaysDiff(r.emdDue);
@@ -445,6 +521,46 @@
         <div>${odHtml}</div>
       `;
       emdLedger.appendChild(row);
+    });
+
+    if(canWrite()){
+      emdLedger.querySelectorAll('.emd-pill').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const current = btn.dataset.paid === '1';
+          toggleEmdPaid(btn.dataset.id, !current);
+        });
+      });
+    }
+  }
+
+  function renderEmdTableMobile(emdLedger, sorted){
+    sorted.forEach(r => {
+      const dd = emdDaysDiff(r.emdDue);
+      let odHtml = '—';
+      if(!r.emdPaid && dd !== null){
+        odHtml = dd < 0 ? `<span class="emd-od bad">${Math.abs(dd)} days</span>` : `<span class="emd-od ok">Due in ${dd}d</span>`;
+      }
+
+      const card = document.createElement('div');
+      card.className = 'tcard';
+      card.innerHTML = `
+        <div class="tcard-top">
+          <div class="tcard-title">
+            <span class="org-name">${escapeHtml(r.org||'—')}</span>
+            <span class="tender-id">${escapeHtml(r.tenderId||'—')}</span>
+          </div>
+          <button class="emd-pill ${r.emdPaid ? 'paid':'unpaid'}" data-id="${r.id}" data-paid="${r.emdPaid ? '1':'0'}" ${canWrite() ? '' : 'disabled'}>
+            ${r.emdPaid ? 'Paid' : 'Unpaid'}
+          </button>
+        </div>
+        <div class="tcard-meta">
+          <div><span class="m-lbl">Tender Due</span><span class="m-val">${fmtDate(r.due)}</span></div>
+          <div><span class="m-lbl">EMD Due</span><span class="m-val">${fmtDate(r.emdDue)}</span></div>
+          <div><span class="m-lbl">EMD Amount</span><span class="m-val">${fmtMoney(r.emd)}</span></div>
+          <div><span class="m-lbl">Overdue</span><span class="m-val">${odHtml}</span></div>
+        </div>
+      `;
+      emdLedger.appendChild(card);
     });
 
     if(canWrite()){
@@ -504,6 +620,12 @@
     });
 
     await loadTenders();
+
+    let resizeTimer = null;
+    window.addEventListener('resize', () => {
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(render, 150);
+    });
   }
 
   init();

@@ -35,6 +35,8 @@ async function init() {
   await pool.query(`ALTER TABLE tenders ADD COLUMN IF NOT EXISTS emd_due DATE;`);
   await pool.query(`ALTER TABLE tenders ADD COLUMN IF NOT EXISTS emd_paid BOOLEAN NOT NULL DEFAULT false;`);
   await pool.query(`ALTER TABLE tenders ADD COLUMN IF NOT EXISTS entered_date DATE;`);
+  await pool.query(`ALTER TABLE tenders ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ NOT NULL DEFAULT now();`);
+  await pool.query(`ALTER TABLE tenders ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ NOT NULL DEFAULT now();`);
 
   await pool.query(`
     CREATE TABLE IF NOT EXISTS attachments (

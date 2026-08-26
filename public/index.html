@@ -281,6 +281,13 @@
     .c-work{display:none;}
     .c-entered{display:none;}
   }
+  @media (max-width:760px){
+    .controls{flex-direction:column; align-items:stretch;}
+    .search{min-width:0;}
+    .sortsel{width:100%;}
+    .addbtn{width:100%;}
+    .ledger{border-radius:6px;}
+  }
   @media (max-width:560px){
     .stats{grid-template-columns:repeat(2,1fr);}
     .row{grid-template-columns: 1fr 90px;}
@@ -288,6 +295,8 @@
     .c-due{display:none;}
     header{flex-direction:column; align-items:flex-start;}
     .header-meta{text-align:left;}
+    .tabbtn{padding:10px 14px; font-size:11px;}
+    .wrap{padding:16px 12px 40px;}
   }
 
   @media (prefers-reduced-motion: reduce){
@@ -480,6 +489,63 @@
     font-size:11px; font-family:'Inter',sans-serif; font-weight:600;
   }
   .attach-empty{font-size:12px; color:var(--slate); font-style:italic;}
+
+  /* ---------- Mobile cards (Dashboard + EMD tables) ---------- */
+  .tcard{
+    background:var(--paper);
+    padding:14px 16px;
+    border-bottom:10px solid var(--ledger);
+  }
+  .tcard:last-child{border-bottom:none;}
+  .tcard-top{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    gap:10px;
+    margin-bottom:8px;
+  }
+  .tcard-title{display:flex; flex-direction:column; gap:2px;}
+  .tcard-title .org-name{font-weight:600; font-size:14px; color:var(--ink); line-height:1.35;}
+  .tcard-title .tender-id{font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--slate);}
+  .tcard-work{color:var(--ink-soft); font-size:12.5px; line-height:1.4; margin-bottom:10px;}
+  .tcard-meta{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:8px 12px;
+    margin-bottom:10px;
+    padding-top:10px;
+    border-top:1px solid var(--paper-line);
+  }
+  .tcard-meta .m-lbl{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:9.5px;
+    text-transform:uppercase;
+    letter-spacing:.04em;
+    color:var(--slate);
+    display:block;
+    margin-bottom:2px;
+  }
+  .tcard-meta .m-val{font-size:13px; color:var(--ink); font-family:'IBM Plex Mono',monospace;}
+  .tcard-actions{display:flex; gap:8px; margin-top:4px;}
+  .tcard-actions button{
+    flex:1;
+    font-family:'Inter',sans-serif;
+    font-size:12.5px;
+    font-weight:600;
+    padding:9px;
+    border-radius:4px;
+    border:1px solid var(--border);
+    background:transparent;
+    color:var(--ink-soft);
+    cursor:pointer;
+  }
+  .tcard-actions .btn-delete{color:var(--red-deep); border-color:var(--red-deep);}
+  .tcard .emd-pill{font-size:11px; padding:5px 11px;}
+
+  @media (max-width:760px){
+    .frow2{grid-template-columns:1fr;}
+    .detail .grid{grid-template-columns:1fr;}
+  }
 </style>
 </head>
 <body>
