@@ -20,6 +20,7 @@ async function fetchOldBackup(rawBase, password) {
   try {
     res = await fetch(base + '/api/login', {
       method: 'POST',
+      redirect: 'manual',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ password }),
     });
@@ -27,7 +28,7 @@ async function fetchOldBackup(rawBase, password) {
     throw new Error(`Could not reach ${base}. Is the old app still running?`);
   }
   const login = await readJson(res);
-  if (!res.ok || !login.token) throw new Error('The old app rejected that password: ' + (login.error || res.status));
+  if (!res.ok || !login.token) throw new Error(`The old app rejected that password (HTTP ${res.status}${res.redirected ? ', redirected to ' + res.url : ''}): ` + String(login.error || '').slice(0, 120));
   if (!login.profile || login.profile.id !== 'admin') {
     throw new Error('Use the old app\'s full-access (admin) password, not a department password.');
   }
