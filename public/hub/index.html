@@ -283,12 +283,16 @@ async function loadImportStatus(){
     f.querySelector('.status').textContent = st ? `Last copied ${when(st.at)} by ${st.by}.` : 'Not copied yet.';
   });
 }
+function loginsNote(r){
+  const l = r.logins || [];
+  return l.length ? ` Added logins (same passwords as before): ${l.join(', ')}.` : '';
+}
 function describe(app, r){
-  if(app === 'report') return `Done. Copied ${r.sites} site${r.sites === 1 ? '' : 's'} and all their figures.`;
+  if(app === 'report') return `Done. Copied ${r.sites} site${r.sites === 1 ? '' : 's'} and all their figures.` + loginsNote(r);
   const total = Object.values(r.records).reduce((a, b) => a + b, 0);
   let t = `Done. Copied ${total} tracker records and ${r.billsCopied} bill PDF${r.billsCopied === 1 ? '' : 's'}.`;
   if(r.billsFailed.length) t += ` ${r.billsFailed.length} bill file(s) could not be read on the old app: ${r.billsFailed.join(', ')}.`;
-  return t;
+  return t + loginsNote(r);
 }
 document.querySelectorAll('.imp form').forEach(f => {
   f.addEventListener('submit', async e => {

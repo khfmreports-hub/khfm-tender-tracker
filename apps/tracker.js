@@ -191,7 +191,8 @@ function createTrackerApp() {
       await save();
       const counts = {};
       RECORD_KEYS.forEach(k => { counts[k] = state[k].length; });
-      return { records: counts, billsCopied: copied, billsFailed: failed };
+      const logins = await store.importLegacyProfiles('tracker', backup.profiles);
+      return { records: counts, billsCopied: copied, billsFailed: failed, logins };
     },
   };
 }

@@ -73,6 +73,10 @@ app.post('/api/hub/login', express.json(), async (req, res) => {
       return res.status(403).json({ error: 'This login is not an admin. Use the User tab.' });
     }
     failedLogins.delete(req.ip);
+    // A login carried over from an old app: swap its old hash for a strong one.
+    if (String(row.password_hash).startsWith('sha256$')) {
+      try { await store.setPassword(row.id, password); } catch (e) { console.error(e); }
+    }
     req.session.regenerate(async (err) => {
       if (err) return res.status(500).json({ error: 'Could not sign in. Try again.' });
       req.session.userId = row.id;

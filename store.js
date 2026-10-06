@@ -56,7 +56,7 @@ async function init() {
       [username, 'Administrator', hashPassword(password)]
     );
     console.log(`Created first admin login "${username}". Change its password after signing in.`);
-  }
+  }  await importTenderLogins();
 }
 
 // ---------- Passwords ----------
@@ -66,7 +66,15 @@ function hashPassword(password) {
   return `${salt}:${hash}`;
 }
 function checkPassword(password, stored) {
-  const [salt, hash] = String(stored || '').split(':');
+  stored = String(stored || '');
+  // Logins carried over from the old apps keep their old (unsalted sha256)
+  // hash until the person next signs in; the login route then re-hashes it.
+  if (stored.startsWith('sha256$')) {
+    const real = Buffer.from(stored.slice(7), 'hex');
+    const test = crypto.createHash('sha256').update(String(password)).digest();
+    return real.length === test.length && crypto.timingSafeEqual(real, test);
+  }
+  const [salt, hash] = stored.split(':');
   if (!salt || !hash) return false;
   const test = crypto.scryptSync(String(password), salt, 64);
   const real = Buffer.from(hash, 'hex');
@@ -101,6 +109,55 @@ function cleanRoles(roles) {
     out[app] = APP_ROLES[app].includes(r) ? r : null;
   });
   return out;
+}
+
+// ---------- Logins carried over from the old apps ----------
+// The old apps had password-only logins per department. Each one becomes a
+// hub user with access to that one app only, keeping the same password.
+const LEGACY_PREFIX = { report: 'report', tracker: 'tracker', tenders: 'tender' };
+const APP_NAMES = { report: 'Report', tracker: 'Tracker', tenders: 'Tender Tracker' };
+function legacyUsername(app, role) {
+  return LEGACY_PREFIX[app] + '-' + String(role).replace(/[^a-z0-9]/gi, '').toLowerCase();
+}
+// Creates the login unless that username already exists (never overwrites).
+async function addLegacyLogin(app, role, label, passwordHash) {
+  if (!APP_ROLES[app].includes(role) || !passwordHash) return false;
+  const roles = { report: null, tracker: null, tenders: null };
+  roles[app] = role;
+  const { rowCount } = await pool.query(
+    `INSERT INTO hub_users (username, name, password_hash, is_admin, report_role, tracker_role, tenders_role)
+     VALUES ($1,$2,$3,false,$4,$5,$6) ON CONFLICT (username) DO NOTHING`,
+    [legacyUsername(app, role), `${APP_NAMES[app]} – ${label}`, passwordHash, roles.report, roles.tracker, roles.tenders]
+  );
+  return rowCount > 0;
+}
+// profiles: the old Report/Tracker backup's profiles [{id, label, passwordHash}]
+async function importLegacyProfiles(app, profiles) {
+  const created = [];
+  for (const p of Array.isArray(profiles) ? profiles : []) {
+    if (!p || !/^[0-9a-f]{64}$/i.test(String(p.passwordHash || ''))) continue;
+    if (await addLegacyLogin(app, p.id, p.label || p.id, 'sha256$' + p.passwordHash.toLowerCase())) {
+      created.push(legacyUsername(app, p.id));
+    }
+  }
+  return created;
+}
+// Tender Tracker kept its two passwords in the settings table of this same
+// database, so those logins are created once, on first start.
+async function importTenderLogins() {
+  if (await getDoc('legacy_tender_logins')) return;
+  let rows = [];
+  try {
+    ({ rows } = await pool.query("SELECT key, value FROM settings WHERE key IN ('admin_password','entry_password')"));
+  } catch (e) { return; }
+  const created = [];
+  for (const r of rows) {
+    const role = r.key === 'admin_password' ? 'admin' : 'entry';
+    const label = role === 'admin' ? 'Admin' : 'Entry';
+    if (await addLegacyLogin('tenders', role, label, hashPassword(r.value))) created.push(legacyUsername('tenders', role));
+  }
+  await setDoc('legacy_tender_logins', { at: new Date().toISOString(), created });
+  if (created.length) console.log('Created Tender Tracker logins: ' + created.join(', '));
 }
 
 async function getUser(id) {
@@ -202,6 +259,7 @@ async function removeBill(id) {
 }
 
 module.exports = {
+  importLegacyProfiles, legacyUsername,
   APPS, APP_ROLES, init, hashPassword, checkPassword, roleFor,
   getUser, findForLogin, markLogin, listUsers, createUser, updateUser, setPassword, deleteUser,
   getDoc, setDoc, listBills, addBill, getBill, removeBill,

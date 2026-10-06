@@ -134,7 +134,8 @@ function createReportApp() {
       if (!backup || !backup.state) throw new Error('The old Report app did not return any data.');
       state = migrateState(backup.state);
       await save();
-      return { sites: state.sites.length };
+      const logins = await store.importLegacyProfiles('report', backup.profiles);
+      return { sites: state.sites.length, logins };
     },
   };
 }
