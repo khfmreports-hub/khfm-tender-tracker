@@ -202,6 +202,27 @@ app.get('/manage', (req, res) => res.redirect('/'));
 app.get('/healthz', (req, res) => res.send('ok'));
 app.use((req, res) => res.status(404).send('Not found. <a href="/">Go to KHFM home</a>'));
 
+// One-time copy from the old services, run by the server itself when
+// IMPORT_<APP>_PASSWORD is set (same as the admin's "Copy … data" button).
+// Never runs twice: an app that already has an import record is skipped.
+async function autoImport() {
+  const jobs = [
+    ['report', report, process.env.IMPORT_REPORT_URL || 'https://khfm-report.onrender.com', process.env.IMPORT_REPORT_PASSWORD],
+    ['tracker', tracker, process.env.IMPORT_TRACKER_URL || 'https://khfm-tracker.onrender.com', process.env.IMPORT_TRACKER_PASSWORD],
+  ];
+  for (const [name, target, url, password] of jobs) {
+    if (!password) continue;
+    try {
+      if (await store.getDoc('import_' + name)) { console.log(`Auto-import ${name}: already copied, skipped.`); continue; }
+      const result = await target.importFromOld(url, password);
+      await store.setDoc('import_' + name, { at: new Date().toISOString(), from: url, by: 'auto-import', result });
+      console.log(`Auto-import ${name}: done ${JSON.stringify(result)}`);
+    } catch (e) {
+      console.error(`Auto-import ${name} failed: ${e.message}`);
+    }
+  }
+}
+
 (async () => {
   try {
     await db.init();     // tender tables (already exist on your database)
@@ -209,6 +230,7 @@ app.use((req, res) => res.status(404).send('Not found. <a href="/">Go to KHFM ho
     await report.init();
     await tracker.init();
     app.listen(PORT, () => console.log(`KHFM running on port ${PORT}`));
+    autoImport();
   } catch (e) {
     console.error('Failed to start:', e);
     process.exit(1);
