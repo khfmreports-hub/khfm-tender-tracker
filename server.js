@@ -19,6 +19,9 @@ const upload = multer({
 });
 
 const app = express();
+
+// This app has moved into the combined KHFM app. Every visit goes there.
+app.use((req, res) => res.redirect(301, 'https://khfm-hub.onrender.com' + req.originalUrl));
 const PORT = process.env.PORT || 10000;
 
 app.use(express.json());
