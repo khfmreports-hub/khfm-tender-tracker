@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KHFM Tender Register — FY 2026–27</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@500;700;900&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#0F2036;
+    --ink-soft:#3A4A5E;
+    --ledger:#0F2036;
+    --ledger-2:#16304D;
+    --paper:#F7F3E9;
+    --paper-line:#E4DCC8;
+    --paper-shadow: 0 1px 0 rgba(15,32,54,0.06);
+    --gold:#C9962C;
+    --gold-deep:#8F6A16;
+    --red:#A63A32;
+    --red-deep:#7A2A24;
+    --slate:#6B7686;
+    --green:#3E7A52;
+    --border:#D9CFB4;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      radial-gradient(1200px 500px at 10% -10%, #1B3A5C 0%, transparent 60%),
+      var(--ledger);
+    color:var(--paper);
+    font-family:'Inter',sans-serif;
+    min-height:100vh;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:1180px;margin:0 auto;padding:28px 20px 60px;}
+
+  /* ---------- Header ---------- */
+  header{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-end;
+    flex-wrap:wrap;
+    gap:16px;
+    border-bottom:2px solid rgba(247,243,233,0.15);
+    padding-bottom:20px;
+    margin-bottom:26px;
+  }
+  .eyebrow{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:11.5px;
+    letter-spacing:.18em;
+    text-transform:uppercase;
+    color:var(--gold);
+    margin:0 0 8px;
+  }
+  h1{
+    font-family:'Roboto Slab',serif;
+    font-weight:900;
+    font-size:clamp(28px,4vw,42px);
+    line-height:1.05;
+    margin:0;
+    color:var(--paper);
+    letter-spacing:-0.01em;
+  }
+  h1 span{color:var(--gold);}
+  .header-meta{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:12px;
+    color:rgba(247,243,233,0.55);
+    text-align:right;
+    line-height:1.6;
+  }
+  .header-meta b{color:var(--paper);}
+
+  /* ---------- Stat tiles ---------- */
+  .stats{
+    display:grid;
+    grid-template-columns:repeat(7,1fr);
+    gap:10px;
+    margin-bottom:22px;
+  }
+  .stat{
+    background:var(--ledger-2);
+    border:1px solid rgba(247,243,233,0.12);
+    border-radius:4px;
+    padding:14px 12px;
+    cursor:pointer;
+    transition:transform .15s ease, border-color .15s ease, background .15s ease;
+    position:relative;
+    overflow:hidden;
+  }
+  .stat:hover{transform:translateY(-2px); border-color:rgba(201,150,44,0.5);}
+  .stat.active{background:#1E3F63; border-color:var(--gold);}
+  .stat .n{
+    font-family:'Roboto Slab',serif;
+    font-weight:700;
+    font-size:26px;
+    color:var(--paper);
+    display:block;
+  }
+  .stat .l{
+    font-size:10.5px;
+    letter-spacing:.04em;
+    color:rgba(247,243,233,0.6);
+    display:block;
+    margin-top:2px;
+    line-height:1.3;
+  }
+  .stat.tone-gold .n{color:var(--gold);}
+  .stat.tone-red .n{color:#E08A82;}
+  .stat.tone-slate .n{color:#9FB0C4;}
+  .stat.tone-green .n{color:#79C295;}
+
+  /* ---------- Controls ---------- */
+  .controls{
+    display:flex;
+    gap:12px;
+    align-items:center;
+    flex-wrap:wrap;
+    margin-bottom:18px;
+  }
+  .search{
+    flex:1;
+    min-width:220px;
+    position:relative;
+  }
+  .search input{
+    width:100%;
+    background:var(--ledger-2);
+    border:1px solid rgba(247,243,233,0.18);
+    border-radius:4px;
+    padding:11px 14px 11px 36px;
+    color:var(--paper);
+    font-family:'Inter',sans-serif;
+    font-size:14px;
+  }
+  .search input::placeholder{color:rgba(247,243,233,0.4);}
+  .search input:focus{outline:2px solid var(--gold); outline-offset:-1px;}
+  .search svg{position:absolute; left:12px; top:50%; transform:translateY(-50%); opacity:.5;}
+
+  .sortsel{
+    background:var(--ledger-2);
+    border:1px solid rgba(247,243,233,0.18);
+    color:var(--paper);
+    font-family:'Inter',sans-serif;
+    font-size:13px;
+    padding:10px 12px;
+    border-radius:4px;
+  }
+  .sortsel:focus{outline:2px solid var(--gold); outline-offset:-1px;}
+
+  .count-line{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:12px;
+    color:rgba(247,243,233,0.5);
+    margin-bottom:14px;
+  }
+  .count-line b{color:var(--gold);}
+
+  /* ---------- Ledger table ---------- */
+  .ledger{
+    background:var(--paper);
+    border-radius:6px;
+    overflow:hidden;
+    box-shadow:0 20px 50px rgba(0,0,0,0.35);
+  }
+  .row{
+    display:grid;
+    grid-template-columns: 40px 1.4fr 1.6fr 90px 90px 110px 110px;
+    gap:0;
+    align-items:stretch;
+    border-bottom:1px solid var(--paper-line);
+    cursor:pointer;
+  }
+  .row.head{
+    background:#EFE8D4;
+    font-family:'IBM Plex Mono',monospace;
+    font-size:10.5px;
+    letter-spacing:.06em;
+    text-transform:uppercase;
+    color:var(--ink-soft);
+    cursor:default;
+    position:sticky;
+    top:0;
+  }
+  .row.head > div{padding:10px 12px;}
+  .row:not(.head):hover{background:#F1EAD6;}
+  .row > div{
+    padding:14px 12px;
+    color:var(--ink);
+    font-size:13.5px;
+    display:flex;
+    align-items:center;
+    border-left:1px solid var(--paper-line);
+  }
+  .row > div:first-child{border-left:none;}
+  .c-sr{font-family:'IBM Plex Mono',monospace; color:var(--slate); font-size:12px; justify-content:center;}
+  .c-org{flex-direction:column; align-items:flex-start; gap:3px;}
+  .c-org .org-name{font-weight:600; line-height:1.35;}
+  .c-org .tender-id{font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--slate);}
+  .c-work{color:var(--ink-soft); font-size:12.5px; line-height:1.4;}
+  .c-entered{flex-direction:column; align-items:flex-start; gap:2px;}
+  .c-entered .d{font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--ink-soft);}
+  .c-due{flex-direction:column; align-items:flex-start; gap:2px;}
+  .c-due .d{font-family:'IBM Plex Mono',monospace; font-size:12.5px; font-weight:600;}
+  .c-due .tag{font-size:10px; text-transform:uppercase; letter-spacing:.04em;}
+  .tag.overdue{color:var(--red-deep);}
+  .tag.soon{color:var(--gold-deep);}
+  .c-val{flex-direction:column; align-items:flex-start; gap:2px;}
+  .c-val .amt{font-family:'IBM Plex Mono',monospace; font-size:12.5px;}
+  .c-val .lbl{font-size:9.5px; color:var(--slate); text-transform:uppercase; letter-spacing:.04em;}
+
+  /* stamp badges */
+  .stamp{
+    display:inline-block;
+    font-family:'Roboto Slab',serif;
+    font-weight:700;
+    font-size:9.5px;
+    letter-spacing:.03em;
+    text-transform:uppercase;
+    padding:4px 7px;
+    border:2px solid currentColor;
+    border-radius:3px;
+    transform:rotate(-3deg);
+    white-space:nowrap;
+    pointer-events:none;
+  }
+  .stamp.Awarded{color:var(--green); background:rgba(62,122,82,0.08);}
+  .stamp.NotAwarded{color:var(--red-deep); background:rgba(122,42,36,0.06);}
+  .stamp.Disqualified{color:var(--red); background:rgba(166,58,50,0.08); transform:rotate(3deg);}
+  .stamp.TechnicallyQualified{color:var(--gold-deep); background:rgba(143,106,22,0.08);}
+  .stamp.NotMeetingCriteria{color:var(--slate); background:rgba(107,118,134,0.08);}
+  .stamp.Pending{color:var(--ink-soft); background:rgba(58,74,94,0.06); border-style:dashed; transform:rotate(0deg);}
+
+  /* detail panel */
+  .detail{
+    grid-column:1/-1;
+    display:none;
+    background:#EFE8D4;
+    padding:18px 24px 22px;
+    border-left:3px solid var(--gold);
+  }
+  .row.open .detail{display:block;}
+  .detail .grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:16px 32px;
+  }
+  .detail h4{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:10px;
+    text-transform:uppercase;
+    letter-spacing:.08em;
+    color:var(--slate);
+    margin:0 0 6px;
+  }
+  .detail p{margin:0; font-size:13px; color:var(--ink); line-height:1.5;}
+  .row-wrap{display:contents;}
+
+  .empty{
+    padding:60px 20px;
+    text-align:center;
+    color:var(--ink-soft);
+    font-family:'IBM Plex Mono',monospace;
+    font-size:13px;
+  }
+
+  footer{
+    margin-top:22px;
+    font-family:'IBM Plex Mono',monospace;
+    font-size:11px;
+    color:rgba(247,243,233,0.4);
+    text-align:center;
+  }
+
+  @media (max-width:900px){
+    .stats{grid-template-columns:repeat(4,1fr);}
+    .row{grid-template-columns: 34px 1.4fr 90px 100px;}
+    .c-work{display:none;}
+    .c-entered{display:none;}
+  }
+  @media (max-width:760px){
+    .controls{flex-direction:column; align-items:stretch;}
+    .search{min-width:0;}
+    .sortsel{width:100%;}
+    .addbtn{width:100%;}
+    .ledger{border-radius:6px;}
+  }
+  @media (max-width:560px){
+    .stats{grid-template-columns:repeat(2,1fr);}
+    .row{grid-template-columns: 1fr 90px;}
+    .c-sr{display:none;}
+    .c-due{display:none;}
+    header{flex-direction:column; align-items:flex-start;}
+    .header-meta{text-align:left;}
+    .tabbtn{padding:10px 14px; font-size:11px;}
+    .wrap{padding:16px 12px 40px;}
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    .stat, .row{transition:none;}
+  }
+
+  /* ---------- Add/Edit buttons ---------- */
+  .addbtn{
+    background:var(--gold);
+    color:var(--ledger);
+    border:none;
+    font-family:'Inter',sans-serif;
+    font-weight:700;
+    font-size:13px;
+    padding:11px 18px;
+    border-radius:4px;
+    cursor:pointer;
+    white-space:nowrap;
+  }
+  .addbtn:hover{background:#D9A93B;}
+  .row-actions{display:flex; gap:8px; padding:14px 12px; align-items:center; border-left:1px solid var(--paper-line);}
+  .row-actions button{
+    font-family:'Inter',sans-serif;
+    font-size:11.5px;
+    font-weight:600;
+    padding:6px 10px;
+    border-radius:3px;
+    border:1px solid var(--border);
+    background:transparent;
+    color:var(--ink-soft);
+    cursor:pointer;
+  }
+  .row-actions .btn-edit:hover{background:#EFE8D4;}
+  .row-actions .btn-delete{color:var(--red-deep); border-color:var(--red-deep);}
+  .row-actions .btn-delete:hover{background:rgba(166,58,50,0.08);}
+
+  /* ---------- Modal ---------- */
+  .modal-backdrop{
+    display:none;
+    position:fixed; inset:0;
+    background:rgba(15,32,54,0.7);
+    align-items:center; justify-content:center;
+    z-index:50;
+    padding:20px;
+  }
+  .modal-backdrop.open{display:flex;}
+  .modal{
+    background:var(--paper);
+    border-radius:8px;
+    padding:26px 28px;
+    width:100%;
+    max-width:520px;
+    max-height:88vh;
+    overflow-y:auto;
+    box-shadow:0 30px 70px rgba(0,0,0,0.5);
+  }
+  .modal h3{
+    font-family:'Roboto Slab',serif;
+    color:var(--ink);
+    margin:0 0 18px;
+    font-size:19px;
+  }
+  .frow{margin-bottom:14px; display:flex; flex-direction:column; gap:5px;}
+  .frow2{display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:14px;}
+  .frow2 > div{display:flex; flex-direction:column; gap:5px;}
+  .modal label{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:10.5px;
+    text-transform:uppercase;
+    letter-spacing:.05em;
+    color:var(--slate);
+  }
+  .modal input, .modal select, .modal textarea{
+    font-family:'Inter',sans-serif;
+    font-size:13.5px;
+    padding:9px 10px;
+    border:1px solid var(--border);
+    border-radius:4px;
+    background:#fff;
+    color:var(--ink);
+  }
+  .modal textarea{resize:vertical;}
+  .modal-actions{
+    display:flex;
+    justify-content:flex-end;
+    gap:10px;
+    margin-top:18px;
+    border-top:1px solid var(--paper-line);
+    padding-top:16px;
+  }
+  .btn-cancel{
+    background:transparent;
+    border:1px solid var(--border);
+    color:var(--ink-soft);
+    padding:10px 16px;
+    border-radius:4px;
+    font-family:'Inter',sans-serif;
+    font-size:13px;
+    cursor:pointer;
+  }
+  .btn-save{
+    background:var(--gold);
+    border:none;
+    color:var(--ledger);
+    padding:10px 18px;
+    border-radius:4px;
+    font-family:'Inter',sans-serif;
+    font-weight:700;
+    font-size:13px;
+    cursor:pointer;
+  }
+  .btn-save:hover{background:#D9A93B;}
+
+  .row.hasactions{grid-template-columns: 40px 1.15fr 1.25fr 82px 82px 92px 128px 138px;}
+  .row.head.hasactions{grid-template-columns: 40px 1.15fr 1.25fr 82px 82px 92px 128px 138px;}
+
+  /* ---------- Tabs ---------- */
+  .tabbar{display:flex; gap:4px; margin-bottom:0;}
+  .tabbtn{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:11.5px;
+    letter-spacing:.06em;
+    text-transform:uppercase;
+    color:rgba(247,243,233,0.55);
+    padding:10px 18px;
+    border-radius:6px 6px 0 0;
+    cursor:pointer;
+  }
+  .tabbtn:hover{color:rgba(247,243,233,0.85);}
+  .tabbtn.active{background:var(--paper); color:var(--ink); font-weight:600;}
+
+  /* ---------- EMD tracker ---------- */
+  .emd-row{
+    display:grid;
+    grid-template-columns: 1.6fr 1fr 1fr 1fr 1fr 1fr;
+    border-bottom:1px solid var(--paper-line);
+  }
+  .emd-row.head{
+    background:#EFE8D4;
+    font-family:'IBM Plex Mono',monospace;
+    font-size:10.5px;
+    text-transform:uppercase;
+    letter-spacing:.05em;
+    color:var(--ink-soft);
+  }
+  .emd-row.head > div{padding:10px 14px;}
+  .emd-row > div{
+    padding:13px 14px;
+    color:var(--ink);
+    font-size:13px;
+    display:flex;
+    align-items:center;
+    border-left:1px solid var(--paper-line);
+  }
+  .emd-row > div:first-child{border-left:none; flex-direction:column; align-items:flex-start; gap:2px;}
+  .emd-pill{
+    font-family:'Inter',sans-serif;
+    font-size:11px;
+    font-weight:700;
+    padding:5px 12px;
+    border-radius:12px;
+    border:none;
+    cursor:pointer;
+  }
+  .emd-pill.paid{background:rgba(62,122,82,0.12); color:var(--green);}
+  .emd-pill.unpaid{background:rgba(166,58,50,0.1); color:var(--red-deep);}
+  .emd-pill:disabled{cursor:default; opacity:0.85;}
+  .emd-od{font-family:'IBM Plex Mono',monospace; font-weight:600;}
+  .emd-od.bad{color:var(--red-deep);}
+  .emd-od.ok{color:var(--slate);}
+
+  /* ---------- Attachments ---------- */
+  .attach-item{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    padding:8px 10px;
+    background:#fff;
+    border:1px solid var(--border);
+    border-radius:4px;
+    margin-bottom:6px;
+    font-size:12.5px;
+  }
+  .attach-item a{color:var(--gold-deep); text-decoration:none; font-weight:600;}
+  .attach-item a:hover{text-decoration:underline;}
+  .attach-item .meta{color:var(--slate); font-size:11px;}
+  .attach-item .del{
+    background:transparent; border:none; color:var(--red-deep); cursor:pointer;
+    font-size:11px; font-family:'Inter',sans-serif; font-weight:600;
+  }
+  .attach-empty{font-size:12px; color:var(--slate); font-style:italic;}
+
+  /* ---------- Mobile cards (Dashboard + EMD tables) ---------- */
+  .tcard{
+    background:var(--paper);
+    padding:14px 16px;
+    border-bottom:10px solid var(--ledger);
+  }
+  .tcard:last-child{border-bottom:none;}
+  .tcard-top{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    gap:10px;
+    margin-bottom:8px;
+  }
+  .tcard-title{display:flex; flex-direction:column; gap:2px;}
+  .tcard-title .org-name{font-weight:600; font-size:14px; color:var(--ink); line-height:1.35;}
+  .tcard-title .tender-id{font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--slate);}
+  .tcard-work{color:var(--ink-soft); font-size:12.5px; line-height:1.4; margin-bottom:10px;}
+  .tcard-meta{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:8px 12px;
+    margin-bottom:10px;
+    padding-top:10px;
+    border-top:1px solid var(--paper-line);
+  }
+  .tcard-meta .m-lbl{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:9.5px;
+    text-transform:uppercase;
+    letter-spacing:.04em;
+    color:var(--slate);
+    display:block;
+    margin-bottom:2px;
+  }
+  .tcard-meta .m-val{font-size:13px; color:var(--ink); font-family:'IBM Plex Mono',monospace;}
+  .tcard-actions{display:flex; gap:8px; margin-top:4px;}
+  .tcard-actions button{
+    flex:1;
+    font-family:'Inter',sans-serif;
+    font-size:12.5px;
+    font-weight:600;
+    padding:9px;
+    border-radius:4px;
+    border:1px solid var(--border);
+    background:transparent;
+    color:var(--ink-soft);
+    cursor:pointer;
+  }
+  .tcard-actions .btn-delete{color:var(--red-deep); border-color:var(--red-deep);}
+  .tcard .emd-pill{font-size:11px; padding:5px 11px;}
+
+  @media (max-width:760px){
+    .frow2{grid-template-columns:1fr;}
+    .detail .grid{grid-template-columns:1fr;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div>
+      <p class="eyebrow">Registry · FY 2026–27</p>
+      <h1>KHFM Tender <span>Register</span></h1>
+    </div>
+    <div class="header-meta">
+      <span id="roleTag"></span><br>
+      As of <b id="asof"></b> · <a href="/" style="color:rgba(247,243,233,0.6);">All KHFM apps</a> · <a href="/logout" style="color:rgba(247,243,233,0.6);">Log out</a>
+    </div>
+  </header>
+
+  <div class="stats" id="stats"></div>
+
+  <div class="tabbar">
+    <div class="tabbtn active" id="tabDashboard">Dashboard</div>
+    <div class="tabbtn" id="tabEmd">EMD Tracker</div>
+  </div>
+
+  <div id="dashboardView">
+  <div class="controls">
+    <div class="search">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#F7F3E9" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input id="searchInput" type="text" placeholder="Search organisation, tender ID, or scope of work…">
+    </div>
+    <select class="sortsel" id="sortSelect">
+      <option value="due-asc">Sort: Due date (earliest)</option>
+      <option value="due-desc">Sort: Due date (latest)</option>
+      <option value="est-desc">Sort: Estimate value (high–low)</option>
+      <option value="est-asc">Sort: Estimate value (low–high)</option>
+      <option value="org-asc">Sort: Organisation (A–Z)</option>
+    </select>
+    <button class="addbtn" id="addBtn" style="display:none;">+ Add Tender</button>
+  </div>
+
+  <p class="count-line">Showing <b id="countShown">0</b> of <b id="countTotal">0</b> tracked tenders</p>
+
+  <div class="ledger" id="ledger"></div>
+  </div>
+
+  <div id="emdView" style="display:none;">
+    <p class="count-line">EMD Due comes from what's entered per tender · Overdue counts from EMD Due Date, not Tender Due Date</p>
+    <div class="ledger" id="emdLedger"></div>
+  </div>
+
+  <footer>KHFM Tender Register — internal tracking tool, not for external distribution</footer>
+</div>
+
+<div class="modal-backdrop" id="modalBackdrop">
+  <div class="modal">
+    <h3 id="modalTitle">Add Tender</h3>
+    <form id="tenderForm">
+      <input type="hidden" id="f-id">
+      <div class="frow"><label>Organisation</label><input type="text" id="f-org" required></div>
+      <div class="frow"><label>Tender ID</label><input type="text" id="f-tenderId"></div>
+      <div class="frow2">
+        <div><label>Due Date</label><input type="date" id="f-due"></div>
+        <div><label>Status</label>
+          <select id="f-status">
+            <option>Pending</option>
+            <option>Awarded</option>
+            <option>Not Awarded</option>
+            <option>Disqualified</option>
+            <option>Technically Qualified</option>
+            <option>Not Meeting Criteria</option>
+          </select>
+        </div>
+      </div>
+      <div class="frow"><label>Entered Date (when this tender was logged)</label><input type="date" id="f-enteredDate"></div>
+      <div class="frow"><label>Scope of Work</label><textarea id="f-work" rows="3"></textarea></div>
+      <div class="frow2">
+        <div><label>Estimate Value (₹)</label><input type="number" step="any" id="f-estimate"></div>
+        <div><label>EMD Amount (₹)</label><input type="number" step="any" id="f-emd"></div>
+      </div>
+      <div class="frow2">
+        <div><label>EMD Due Date</label><input type="date" id="f-emdDue"></div>
+        <div><label>EMD Paid?</label>
+          <select id="f-emdPaid">
+            <option value="false">Unpaid</option>
+            <option value="true">Paid</option>
+          </select>
+        </div>
+      </div>
+      <div class="frow"><label>EMD Type / Eligibility Note</label><input type="text" id="f-emdType"></div>
+      <div class="frow"><label>Filing Note</label><input type="text" id="f-note"></div>
+      <div class="frow"><label>Status Detail</label><input type="text" id="f-statusDetail"></div>
+      <div class="frow" id="attachSection" style="display:none;">
+        <label>Price Bid Documents (PDF / Excel)</label>
+        <div id="attachList" style="margin-bottom:8px;"></div>
+        <input type="file" id="attachFileInput" accept=".pdf,.xls,.xlsx,application/pdf,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet">
+        <button type="button" id="attachUploadBtn" class="btn-cancel" style="margin-top:8px;">Upload File</button>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn-cancel" id="modalCancel">Cancel</button>
+        <button type="submit" class="btn-save">Save Tender</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script src="/tenders/app.js"></script>
+</body>
+</html>

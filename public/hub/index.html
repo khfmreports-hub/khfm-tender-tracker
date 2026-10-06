@@ -1,0 +1,326 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>KHFM — Home</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='4' fill='%231B3E6F'/%3E%3Cpath d='M9 8v16M9 16h9l6-8M18 16l6 8' stroke='%23C0272D' stroke-width='2.6' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{--navy:#1B3E6F;--navy-deep:#12294A;--red:#C0272D;--red-dark:#9E1E23;--ink:#14213A;--muted:#4D5A6B;--paper:#F4F2EE;--card:#FFFFFF;--line:#E1DCD2;--soft:#EFEBE4;--pink:#FBE9EA;--good:#1E6B3A;}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:'IBM Plex Sans',system-ui,sans-serif;color:var(--ink);background:var(--paper)}
+  a{color:var(--navy)}
+  header{background:var(--navy-deep);color:#F4F2EE}
+  .bar{max-width:1180px;margin:0 auto;padding:12px 20px;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px}
+  .logo{background:#fff;border-radius:8px;padding:5px 8px;display:inline-flex}
+  .logo img{display:block;width:96px;height:auto}
+  .who{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
+  .badge{padding:5px 11px;border-radius:999px;background:#2C4A78;font-size:13px;font-weight:600}
+  .hbtn{color:#F4F2EE;background:transparent;border:0;font:inherit;font-size:14px;font-weight:500;padding:10px 8px;cursor:pointer;text-decoration:none}
+  .hbtn:hover{text-decoration:underline}
+  main{max-width:1180px;margin:0 auto;padding:36px 20px 64px;display:flex;flex-direction:column;gap:36px}
+  h1{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:40px;margin:0;letter-spacing:.01em}
+  h2{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:28px;margin:0;letter-spacing:.01em}
+  .sub{margin:4px 0 0;color:var(--muted)}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:18px}
+  .app{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:22px;display:flex;flex-direction:column;gap:14px}
+  .icon{width:44px;height:44px;border-radius:10px;background:var(--pink);display:flex;align-items:center;justify-content:center}
+  .app h3{margin:0;font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:700}
+  .app p{margin:2px 0 0;color:var(--muted);font-size:14px}
+  .open{margin-top:auto;height:46px;display:flex;align-items:center;justify-content:center;background:var(--navy);color:#fff;border-radius:10px;font-weight:600;text-decoration:none}
+  .open:hover{background:var(--navy-deep)}
+  .empty{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:22px;color:var(--muted)}
+  .panel{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:22px;display:flex;flex-direction:column;gap:18px}
+  .head{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:12px}
+  .btn{height:44px;padding:0 18px;border:0;border-radius:10px;background:var(--red);color:#fff;font:inherit;font-weight:600;cursor:pointer}
+  .btn:hover{background:var(--red-dark)}
+  .btn.secondary{background:var(--soft);color:var(--ink)}
+  .btn.secondary:hover{background:#E4DED3}
+  .btn:disabled{opacity:.6;cursor:wait}
+  .link{background:none;border:0;padding:8px 4px;font:inherit;font-size:14px;color:var(--navy);text-decoration:underline;cursor:pointer}
+  .link.danger{color:var(--red-dark)}
+  .scroll{overflow-x:auto}
+  table{width:100%;min-width:860px;border-collapse:collapse;font-size:14px}
+  th{text-align:left;color:var(--muted);font-weight:600;padding:10px;border-bottom:1px solid var(--line)}
+  td{padding:10px;border-bottom:1px solid var(--soft);vertical-align:middle}
+  tr:last-child td{border-bottom:0}
+  select,input[type=text],input[type=password],input[type=url]{height:40px;padding:0 10px;border:1px solid #C9C3B8;border-radius:8px;font:inherit;font-size:14px;background:#fff;color:var(--ink);width:100%}
+  select{min-width:140px}
+  input:focus,select:focus{outline:2px solid var(--navy);outline-offset:1px}
+  .chk{width:20px;height:20px;accent-color:var(--red)}
+  .uname{color:#5B6473;font-size:13px}
+  .form{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;align-items:end;padding:16px;background:var(--paper);border-radius:12px}
+  .form label{display:flex;flex-direction:column;gap:5px;font-size:13px;font-weight:600}
+  .form .check{flex-direction:row;align-items:center;gap:8px;height:40px}
+  .msg{margin:0;font-size:14px;min-height:20px}
+  .msg.ok{color:var(--good)} .msg.err{color:var(--red-dark)}
+  .saved{color:var(--good);font-size:12px;margin-left:6px}
+  .imp{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px}
+  .imp form{display:flex;flex-direction:column;gap:10px;padding:16px;background:var(--paper);border-radius:12px}
+  .imp h3{margin:0;font-size:16px}
+  .imp label{display:flex;flex-direction:column;gap:5px;font-size:13px;font-weight:600}
+  .small{font-size:13px;color:var(--muted);margin:0;line-height:1.5}
+  dialog{border:0;border-radius:14px;padding:24px;max-width:380px;width:calc(100% - 32px)}
+  dialog::backdrop{background:rgba(18,41,74,.45)}
+  dialog form{display:flex;flex-direction:column;gap:12px}
+  dialog label{display:flex;flex-direction:column;gap:5px;font-size:13px;font-weight:600}
+  .row{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
+  [hidden]{display:none!important}
+</style>
+</head>
+<body>
+<header>
+  <div class="bar">
+    <a class="logo" href="/" aria-label="KHFM home"><img src="/logo.gif" alt="KHFM"></a>
+    <div class="who">
+      <span class="badge" id="badge">…</span>
+      <button class="hbtn" id="my-pw-btn" type="button">Change my password</button>
+      <a class="hbtn" href="/logout">Sign out</a>
+    </div>
+  </div>
+</header>
+
+<main>
+  <div>
+    <h1 id="greeting">Welcome</h1>
+    <p class="sub">Pick an app to open.</p>
+  </div>
+  <div class="grid" id="apps"></div>
+
+  <section class="panel" id="users-panel" hidden>
+    <div class="head">
+      <div>
+        <h2>Users &amp; access</h2>
+        <p class="sub" style="font-size:14px">Admin only. Choose which apps each person can open, and what they can do there. Changes save straight away.</p>
+      </div>
+      <button class="btn" type="button" id="add-toggle">+ Add user</button>
+    </div>
+
+    <form class="form" id="add-form" hidden>
+      <label>Name<input type="text" name="name" placeholder="e.g. Priya Shah"></label>
+      <label>Username<input type="text" name="username" autocapitalize="none" spellcheck="false" placeholder="e.g. priya" required></label>
+      <label>Password<input type="text" name="password" placeholder="At least 6 characters" required></label>
+      <label>Report<select name="report"></select></label>
+      <label>Tracker<select name="tracker"></select></label>
+      <label>Tenders<select name="tenders"></select></label>
+      <label class="check"><input type="checkbox" class="chk" name="isAdmin"> Admin (everything)</label>
+      <div class="row" style="justify-content:flex-start"><button class="btn" type="submit">Create user</button><button class="btn secondary" type="button" id="add-cancel">Cancel</button></div>
+      <p class="msg" id="add-msg" style="grid-column:1/-1"></p>
+    </form>
+
+    <div class="scroll">
+      <table>
+        <thead><tr><th>Name</th><th>Admin</th><th>Report</th><th>Tracker</th><th>Tenders</th><th>Last sign-in</th><th></th></tr></thead>
+        <tbody id="users"></tbody>
+      </table>
+    </div>
+    <p class="msg" id="users-msg"></p>
+  </section>
+
+  <section class="panel" id="import-panel" hidden>
+    <div>
+      <h2>Move data from the old apps</h2>
+      <p class="sub" style="font-size:14px">Do this once, while the old Report and Tracker services are still running. Tender Tracker data is already here — it uses the same database.</p>
+    </div>
+    <div class="imp">
+      <form data-app="report">
+        <h3>KHFM Report</h3>
+        <label>Old app address<input type="url" name="url" value="https://khfm-report.onrender.com" required></label>
+        <label>Its full-access password<input type="password" name="password" autocomplete="off" required></label>
+        <button class="btn" type="submit">Copy Report data</button>
+        <p class="msg"></p>
+        <p class="small status"></p>
+      </form>
+      <form data-app="tracker">
+        <h3>KHFM Tracker (with bill PDFs)</h3>
+        <label>Old app address<input type="url" name="url" value="https://khfm-tracker.onrender.com" required></label>
+        <label>Its Dashboard (full-access) password<input type="password" name="password" autocomplete="off" required></label>
+        <button class="btn" type="submit">Copy Tracker data</button>
+        <p class="msg"></p>
+        <p class="small status"></p>
+      </form>
+    </div>
+    <p class="small">Copying again replaces what's here with a fresh copy from the old app, so only repeat it before your team starts entering data in the new app.</p>
+  </section>
+</main>
+
+<dialog id="my-pw">
+  <form id="my-pw-form">
+    <h2 style="font-size:24px">Change my password</h2>
+    <label>Current password<input type="password" name="current" autocomplete="current-password" required></label>
+    <label>New password<input type="password" name="password" autocomplete="new-password" minlength="6" required></label>
+    <p class="msg" id="my-pw-msg"></p>
+    <div class="row"><button class="btn secondary" type="button" id="my-pw-cancel">Cancel</button><button class="btn" type="submit">Save</button></div>
+  </form>
+</dialog>
+
+<script>
+const APPS = [
+  {key:'report', name:'Report', url:'/report/', desc:'Sitewise monthly figures', icon:'<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>'},
+  {key:'tracker', name:'Tracker', url:'/tracker/', desc:'Housekeeping & Pest Control', icon:'<path d="M9 11l3 3 8-8"/><path d="M20 12v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h9"/>'},
+  {key:'tenders', name:'Tender Tracker', url:'/tenders/', desc:'Tenders, EMD and price bids', icon:'<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h5"/>'},
+];
+const ROLES = {
+  report: [['', 'No access'], ['admin', 'Full access'], ['payroll', 'Payroll'], ['procurement', 'Procurement']],
+  tracker: [['', 'No access'], ['admin', 'Full access'], ['housekeeping', 'Housekeeping'], ['pest_control', 'Pest Control']],
+  tenders: [['', 'No access'], ['admin', 'Admin (can delete)'], ['entry', 'Entry (add/edit)']],
+};
+function roleLabel(app, role){ const r = ROLES[app].find(x => x[0] === (role||'')); return r ? r[1] : role; }
+function esc(s){ return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+async function api(path, options){
+  options = options || {};
+  if(options.body && typeof options.body !== 'string') options.body = JSON.stringify(options.body);
+  options.headers = Object.assign({'Content-Type':'application/json'}, options.headers || {});
+  const res = await fetch(path, options);
+  if(res.status === 401){ window.location.href = '/login'; throw new Error('Signed out'); }
+  const data = await res.json().catch(() => ({}));
+  if(!res.ok) throw new Error(data.error || 'Something went wrong.');
+  return data;
+}
+function setMsg(el, text, ok){ el.textContent = text || ''; el.className = 'msg ' + (text ? (ok ? 'ok' : 'err') : ''); }
+function options(app, selected){ return ROLES[app].map(([v, l]) => `<option value="${v}"${(selected||'') === v ? ' selected' : ''}>${esc(l)}</option>`).join(''); }
+function when(ts){ if(!ts) return 'Never'; const d = new Date(ts); return d.toLocaleDateString('en-IN', {day:'numeric', month:'short'}) + ', ' + d.toLocaleTimeString('en-IN', {hour:'numeric', minute:'2-digit'}); }
+
+let me = null;
+
+async function init(){
+  me = await api('/api/hub/me');
+  const u = me.user;
+  document.getElementById('badge').textContent = (u.name || u.username) + (u.isAdmin ? ' · Admin' : '');
+  document.getElementById('greeting').textContent = 'Welcome back' + (u.name ? ', ' + u.name.split(' ')[0] : '');
+  const mine = APPS.filter(a => me.roles[a.key]);
+  document.getElementById('apps').innerHTML = mine.length ? mine.map(a => `
+    <div class="app">
+      <div class="icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#9E1E23" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${a.icon}</svg></div>
+      <div><h3>${a.name}</h3><p>${esc(a.desc)} · ${esc(roleLabel(a.key, me.roles[a.key]))}</p></div>
+      <a class="open" href="${a.url}">Open ${a.name}</a>
+    </div>`).join('') : '<div class="empty">Your login doesn’t have access to any app yet. Ask a KHFM admin to give you access.</div>';
+  if(u.isAdmin){
+    document.getElementById('users-panel').hidden = false;
+    document.getElementById('import-panel').hidden = false;
+    ['report','tracker','tenders'].forEach(app => { document.querySelector(`#add-form select[name=${app}]`).innerHTML = options(app, ''); });
+    await loadUsers();
+    await loadImportStatus();
+  }
+}
+
+// ---------- Users ----------
+async function loadUsers(){
+  const users = await api('/api/hub/users');
+  document.getElementById('users').innerHTML = users.map(u => `
+    <tr data-id="${u.id}">
+      <td><strong>${esc(u.name || u.username)}</strong><div class="uname">${esc(u.username)}${u.id === me.user.id ? ' (you)' : ''}</div></td>
+      <td><input type="checkbox" class="chk" data-f="isAdmin" aria-label="Admin" ${u.isAdmin ? 'checked' : ''}></td>
+      ${['report','tracker','tenders'].map(app => `<td><select data-f="${app}" aria-label="${app} access" ${u.isAdmin ? 'disabled' : ''}>${u.isAdmin ? '<option>Full access</option>' : options(app, u.roles[app])}</select></td>`).join('')}
+      <td>${esc(when(u.lastLoginAt))}</td>
+      <td style="white-space:nowrap"><button class="link" data-act="pw" type="button">Reset password</button>${u.id === me.user.id ? '' : '<button class="link danger" data-act="del" type="button">Delete</button>'}<span class="saved" hidden>Saved</span></td>
+    </tr>`).join('');
+  document.querySelectorAll('#users tr').forEach(tr => { tr._user = users.find(u => String(u.id) === tr.dataset.id); });
+}
+
+document.getElementById('users').addEventListener('change', async e => {
+  const tr = e.target.closest('tr');
+  if(!tr) return;
+  const u = tr._user;
+  const msg = document.getElementById('users-msg');
+  const isAdmin = tr.querySelector('[data-f=isAdmin]').checked;
+  const roles = {};
+  ['report','tracker','tenders'].forEach(app => { const s = tr.querySelector(`[data-f=${app}]`); roles[app] = (u.isAdmin && !isAdmin) ? '' : s.value; });
+  try{
+    await api('/api/hub/users/' + u.id, {method:'PUT', body:{name:u.name, isAdmin, roles}});
+    setMsg(msg, '');
+    await loadUsers();
+    const saved = document.querySelector(`#users tr[data-id="${u.id}"] .saved`);
+    if(saved){ saved.hidden = false; setTimeout(() => { saved.hidden = true; }, 1500); }
+    if(u.id === me.user.id && !isAdmin) window.location.reload();
+  }catch(err){ setMsg(msg, err.message, false); await loadUsers(); }
+});
+
+document.getElementById('users').addEventListener('click', async e => {
+  const btn = e.target.closest('button[data-act]');
+  if(!btn) return;
+  const u = btn.closest('tr')._user;
+  const msg = document.getElementById('users-msg');
+  if(btn.dataset.act === 'pw'){
+    const pw = prompt(`New password for ${u.name || u.username} (at least 6 characters):`);
+    if(!pw) return;
+    try{ await api(`/api/hub/users/${u.id}/password`, {method:'POST', body:{password: pw}}); setMsg(msg, `Password changed for ${u.name || u.username}. Tell them the new password.`, true); }
+    catch(err){ setMsg(msg, err.message, false); }
+  }
+  if(btn.dataset.act === 'del'){
+    if(!confirm(`Delete the login for ${u.name || u.username}? They will no longer be able to sign in.`)) return;
+    try{ await api('/api/hub/users/' + u.id, {method:'DELETE'}); setMsg(msg, 'Login deleted.', true); await loadUsers(); }
+    catch(err){ setMsg(msg, err.message, false); }
+  }
+});
+
+const addForm = document.getElementById('add-form');
+document.getElementById('add-toggle').addEventListener('click', () => { addForm.hidden = !addForm.hidden; if(!addForm.hidden) addForm.elements.username.focus(); });
+document.getElementById('add-cancel').addEventListener('click', () => { addForm.hidden = true; addForm.reset(); setMsg(document.getElementById('add-msg'), ''); });
+addForm.addEventListener('submit', async e => {
+  e.preventDefault();
+  const f = addForm.elements;
+  const msg = document.getElementById('add-msg');
+  try{
+    await api('/api/hub/users', {method:'POST', body:{
+      name: f.name.value.trim(), username: f.username.value.trim(), password: f.password.value, isAdmin: f.isAdmin.checked,
+      roles: {report: f.report.value, tracker: f.tracker.value, tenders: f.tenders.value},
+    }});
+    const who = f.name.value.trim() || f.username.value.trim();
+    addForm.reset();
+    setMsg(msg, `Created a login for ${who}. Share their username and password with them.`, true);
+    await loadUsers();
+  }catch(err){ setMsg(msg, err.message, false); }
+});
+
+// ---------- Import from the old apps ----------
+async function loadImportStatus(){
+  const s = await api('/api/hub/import-status');
+  document.querySelectorAll('.imp form').forEach(f => {
+    const st = s[f.dataset.app];
+    f.querySelector('.status').textContent = st ? `Last copied ${when(st.at)} by ${st.by}.` : 'Not copied yet.';
+  });
+}
+function describe(app, r){
+  if(app === 'report') return `Done. Copied ${r.sites} site${r.sites === 1 ? '' : 's'} and all their figures.`;
+  const total = Object.values(r.records).reduce((a, b) => a + b, 0);
+  let t = `Done. Copied ${total} tracker records and ${r.billsCopied} bill PDF${r.billsCopied === 1 ? '' : 's'}.`;
+  if(r.billsFailed.length) t += ` ${r.billsFailed.length} bill file(s) could not be read on the old app: ${r.billsFailed.join(', ')}.`;
+  return t;
+}
+document.querySelectorAll('.imp form').forEach(f => {
+  f.addEventListener('submit', async e => {
+    e.preventDefault();
+    const app = f.dataset.app;
+    const msg = f.querySelector('.msg');
+    if(!confirm('This replaces the ' + (app === 'report' ? 'Report' : 'Tracker') + ' data in the new app with a fresh copy from the old app. Continue?')) return;
+    const btn = f.querySelector('button');
+    btn.disabled = true; setMsg(msg, 'Copying… this can take a minute if the old app is waking up.', true);
+    try{
+      const r = await api('/api/hub/import/' + app, {method:'POST', body:{url: f.elements.url.value.trim(), password: f.elements.password.value}});
+      setMsg(msg, describe(app, r.result), true);
+      f.elements.password.value = '';
+      await loadImportStatus();
+    }catch(err){ setMsg(msg, err.message, false); }
+    btn.disabled = false;
+  });
+});
+
+// ---------- My password ----------
+const dlg = document.getElementById('my-pw');
+document.getElementById('my-pw-btn').addEventListener('click', () => { document.getElementById('my-pw-form').reset(); setMsg(document.getElementById('my-pw-msg'), ''); dlg.showModal(); });
+document.getElementById('my-pw-cancel').addEventListener('click', () => dlg.close());
+document.getElementById('my-pw-form').addEventListener('submit', async e => {
+  e.preventDefault();
+  const f = e.target.elements;
+  const msg = document.getElementById('my-pw-msg');
+  try{ await api('/api/hub/my-password', {method:'POST', body:{current: f.current.value, password: f.password.value}}); setMsg(msg, 'Password changed.', true); setTimeout(() => dlg.close(), 900); }
+  catch(err){ setMsg(msg, err.message, false); }
+});
+
+init().catch(err => { document.getElementById('apps').innerHTML = `<div class="empty">${esc(err.message)}</div>`; });
+</script>
+</body>
+</html>
