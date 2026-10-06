@@ -204,7 +204,7 @@ app.use((req, res) => res.status(404).send('Not found. <a href="/">Go to KHFM ho
 
 // One-time copy from the old services, run by the server itself when
 // IMPORT_<APP>_PASSWORD is set (same as the admin's "Copy … data" button).
-// Never runs twice: an app that already has an import record is skipped.
+// Never runs twice for the same IMPORT_RUN_ID (or with none set).
 async function autoImport() {
   const jobs = [
     ['report', report, process.env.IMPORT_REPORT_URL || 'https://khfm-report.onrender.com', process.env.IMPORT_REPORT_PASSWORD],
@@ -213,9 +213,13 @@ async function autoImport() {
   for (const [name, target, url, password] of jobs) {
     if (!password) continue;
     try {
-      if (await store.getDoc('import_' + name)) { console.log(`Auto-import ${name}: already copied, skipped.`); continue; }
+      // IMPORT_RUN_ID lets one deliberate re-copy happen (e.g. after the old
+      // apps are switched to redirect here); the same ID never runs twice.
+      const runId = process.env.IMPORT_RUN_ID || null;
+      const prev = await store.getDoc('import_' + name);
+      if (prev && (prev.runId || null) === runId) { console.log(`Auto-import ${name}: already copied, skipped.`); continue; }
       const result = await target.importFromOld(url, password);
-      await store.setDoc('import_' + name, { at: new Date().toISOString(), from: url, by: 'auto-import', result });
+      await store.setDoc('import_' + name, { at: new Date().toISOString(), from: url, by: 'auto-import', runId: process.env.IMPORT_RUN_ID || null, result });
       console.log(`Auto-import ${name}: done ${JSON.stringify(result)}`);
     } catch (e) {
       console.error(`Auto-import ${name} failed: ${e.message}`);
