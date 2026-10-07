@@ -67,9 +67,11 @@ app.post('/api/hub/login', express.json(), async (req, res) => {
     const row = await store.findForLogin(username);
     if (!row || !store.checkPassword(password, row.password_hash)) {
       noteFailure(req.ip);
+      console.log(`Login failed for "${String(username).trim().toLowerCase().slice(0, 60)}" (${row ? 'wrong password' : 'no such user'})`);
       return res.status(401).json({ error: 'Wrong username or password.' });
     }
     if (mode === 'admin' && !row.is_admin) {
+      console.log(`Login refused for "${row.username}" on Admin tab (not an admin)`);
       return res.status(403).json({ error: 'This login is not an admin. Use the User tab.' });
     }
     failedLogins.delete(req.ip);

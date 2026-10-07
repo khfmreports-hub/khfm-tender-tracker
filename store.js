@@ -57,6 +57,7 @@ async function init() {
     );
     console.log(`Created first admin login "${username}". Change its password after signing in.`);
   }  await importTenderLogins();
+  await applyPasswordResets();
 }
 
 // ---------- Passwords ----------
@@ -158,6 +159,27 @@ async function importTenderLogins() {
   }
   await setDoc('legacy_tender_logins', { at: new Date().toISOString(), created });
   if (created.length) console.log('Created Tender Tracker logins: ' + created.join(', '));
+}
+
+// Sets passwords from the RESET_PASSWORDS environment variable, e.g.
+// {"admin":"NewPass1","tender-entry":"entry2026"}. Each distinct value is
+// applied once only, so people can still change their own password later.
+async function applyPasswordResets() {
+  const raw = process.env.RESET_PASSWORDS;
+  if (!raw) return;
+  let wanted;
+  try { wanted = JSON.parse(raw); } catch (e) { console.error('RESET_PASSWORDS is not valid JSON.'); return; }
+  const fingerprint = crypto.createHash('sha256').update(raw).digest('hex');
+  const done = await getDoc('password_reset');
+  if (done && done.fingerprint === fingerprint) return;
+  const changed = [], missing = [];
+  for (const [username, password] of Object.entries(wanted || {})) {
+    const { rowCount } = await pool.query('UPDATE hub_users SET password_hash = $1 WHERE username = $2',
+      [hashPassword(password), normUsername(username)]);
+    (rowCount ? changed : missing).push(username);
+  }
+  await setDoc('password_reset', { at: new Date().toISOString(), fingerprint, changed, missing });
+  console.log(`Password reset: set ${changed.join(', ') || 'none'}${missing.length ? '; not found: ' + missing.join(', ') : ''}`);
 }
 
 async function getUser(id) {
