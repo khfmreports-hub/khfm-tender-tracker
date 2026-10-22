@@ -8,11 +8,11 @@ const { appGuard, sessionsFor } = require('../auth');
 const { fetchOldBackup } = require('./old-app');
 
 const DOC_KEY = 'report';
-const METRIC_KEYS = ['salary', 'profit_loss', 'vendor_expenses', 'pf', 'esic', 'bonus', 'leave_wages', 'pt', 'labour_strength', 'billing', 'gst', 'deduction', 'hold', 'special_expenses', 'subcontractor_pl'];
+const METRIC_KEYS = ['salary', 'profit_loss', 'vendor_expenses', 'pf', 'esic', 'bonus', 'leave_wages', 'pt', 'labour_strength', 'billing', 'payment_received', 'gst', 'deduction', 'hold', 'special_expenses', 'subcontractor_pl'];
 const PROFILES = {
   admin: { label: 'Full access', sections: 'all' },
   payroll: { label: 'Payroll access', sections: ['salary', 'pf', 'esic', 'bonus', 'leave_wages', 'pt', 'labour_strength'] },
-  procurement: { label: 'Procurement access', sections: ['vendor_expenses', 'billing', 'gst', 'deduction', 'hold', 'special_expenses', 'subcontractor_pl'] },
+  procurement: { label: 'Procurement access', sections: ['vendor_expenses', 'billing', 'payment_received', 'gst', 'deduction', 'hold', 'special_expenses', 'subcontractor_pl'] },
 };
 
 function allowedSections(role) {
