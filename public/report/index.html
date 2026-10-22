@@ -507,7 +507,7 @@ function removeSub(id){
 
 function renderDashboard(page){
   const monthlyRows = MONTHS.map(m=>{
-    let salary=0, pf=0, esic=0, bonus=0, leaveWages=0, pt=0, labour=0, vendor=0, special=0, billing=0, gst=0, deduction=0, hold=0;
+    let salary=0, pf=0, esic=0, bonus=0, leaveWages=0, pt=0, labour=0, vendor=0, special=0, billing=0, received=0, gst=0, deduction=0, hold=0;
     state.sites.forEach(site=>{
       salary += ((state.salary||{})[site.id]||{})[m] || 0;
       pf += ((state.pf||{})[site.id]||{})[m] || 0;
@@ -519,17 +519,18 @@ function renderDashboard(page){
       vendor += ((state.vendor_expenses||{})[site.id]||{})[m] || 0;
       special += ((state.special_expenses||{})[site.id]||{})[m] || 0;
       billing += ((state.billing||{})[site.id]||{})[m] || 0;
+      received += ((state.payment_received||{})[site.id]||{})[m] || 0;
       gst += ((state.gst||{})[site.id]||{})[m] || 0;
       deduction += ((state.deduction||{})[site.id]||{})[m] || 0;
       hold += ((state.hold||{})[site.id]||{})[m] || 0;
     });
     const net = billing - salary - vendor - pf - esic - bonus - leaveWages - pt - special - gst - deduction - hold;
-    return {month:m, salary, pf, esic, bonus, leaveWages, pt, labour, vendor, special, billing, gst, deduction, hold, net};
+    return {month:m, salary, pf, esic, bonus, leaveWages, pt, labour, vendor, special, billing, received, gst, deduction, hold, net};
   });
   const monthlyTotal = monthlyRows.reduce((a,r)=>({
     salary:a.salary+r.salary, pf:a.pf+r.pf, esic:a.esic+r.esic, bonus:a.bonus+r.bonus, leaveWages:a.leaveWages+r.leaveWages, pt:a.pt+r.pt, labour:a.labour+r.labour, vendor:a.vendor+r.vendor,
-    special:a.special+r.special, billing:a.billing+r.billing, gst:a.gst+r.gst, deduction:a.deduction+r.deduction, hold:a.hold+r.hold, net:a.net+r.net
-  }), {salary:0,pf:0,esic:0,bonus:0,leaveWages:0,pt:0,labour:0,vendor:0,special:0,billing:0,gst:0,deduction:0,hold:0,net:0});
+    special:a.special+r.special, billing:a.billing+r.billing, received:a.received+r.received, gst:a.gst+r.gst, deduction:a.deduction+r.deduction, hold:a.hold+r.hold, net:a.net+r.net
+  }), {salary:0,pf:0,esic:0,bonus:0,leaveWages:0,pt:0,labour:0,vendor:0,special:0,billing:0,received:0,gst:0,deduction:0,hold:0,net:0});
   const monthlyAvgLabour = monthlyTotal.labour / MONTHS.length;
 
   page.innerHTML = `
@@ -538,10 +539,10 @@ function renderDashboard(page){
 
     <h3 class="disp" style="font-size:18px;margin:0 0 8px;">Monthly summary — all sites combined</h3>
     <div style="overflow-x:auto;margin-bottom:32px;">
-    <table style="min-width:1080px;">
+    <table style="min-width:1180px;">
       <tr>
         <th>Month</th><th class="num">Salary</th><th class="num">PF</th><th class="num">ESIC</th><th class="num">Bonus</th><th class="num">Leave Wages</th><th class="num">PT</th><th class="num">Labour Strength</th>
-        <th class="num">Vendor</th><th class="num">Other</th><th class="num">Billing</th><th class="num">GST</th><th class="num">Deduction</th><th class="num">Hold</th><th class="num">P/L</th>
+        <th class="num">Vendor</th><th class="num">Other</th><th class="num">Billing</th><th class="num">Payment received</th><th class="num">GST</th><th class="num">Deduction</th><th class="num">Hold</th><th class="num">P/L</th>
       </tr>
       ${monthlyRows.map(r=>`
         <tr>
@@ -556,6 +557,7 @@ function renderDashboard(page){
           <td class="num mono">${fmtCurrency(r.vendor)}</td>
           <td class="num mono">${fmtCurrency(r.special)}</td>
           <td class="num mono">${fmtCurrency(r.billing)}</td>
+          <td class="num mono">${fmtCurrency(r.received)}</td>
           <td class="num mono">${fmtCurrency(r.gst)}</td>
           <td class="num mono">${fmtCurrency(r.deduction)}</td>
           <td class="num mono">${fmtCurrency(r.hold)}</td>
@@ -574,6 +576,7 @@ function renderDashboard(page){
         <td class="num mono">${fmtCurrency(monthlyTotal.vendor)}</td>
         <td class="num mono">${fmtCurrency(monthlyTotal.special)}</td>
         <td class="num mono">${fmtCurrency(monthlyTotal.billing)}</td>
+        <td class="num mono">${fmtCurrency(monthlyTotal.received)}</td>
         <td class="num mono">${fmtCurrency(monthlyTotal.gst)}</td>
         <td class="num mono">${fmtCurrency(monthlyTotal.deduction)}</td>
         <td class="num mono">${fmtCurrency(monthlyTotal.hold)}</td>
@@ -595,16 +598,17 @@ function renderDashboard(page){
         const vendor = ((state.vendor_expenses||{})[site.id]||{})[m] || 0;
         const special = ((state.special_expenses||{})[site.id]||{})[m] || 0;
         const billing = ((state.billing||{})[site.id]||{})[m] || 0;
+        const received = ((state.payment_received||{})[site.id]||{})[m] || 0;
         const gst = ((state.gst||{})[site.id]||{})[m] || 0;
         const deduction = ((state.deduction||{})[site.id]||{})[m] || 0;
         const hold = ((state.hold||{})[site.id]||{})[m] || 0;
         const net = billing - salary - vendor - pf - esic - bonus - leaveWages - pt - special - gst - deduction - hold;
-        return {month:m, salary, pf, esic, bonus, leaveWages, pt, labour, vendor, special, billing, gst, deduction, hold, net};
+        return {month:m, salary, pf, esic, bonus, leaveWages, pt, labour, vendor, special, billing, received, gst, deduction, hold, net};
       });
       const siteTotal = siteMonthRows.reduce((a,r)=>({
         salary:a.salary+r.salary, pf:a.pf+r.pf, esic:a.esic+r.esic, bonus:a.bonus+r.bonus, leaveWages:a.leaveWages+r.leaveWages, pt:a.pt+r.pt, labour:a.labour+r.labour, vendor:a.vendor+r.vendor,
-        special:a.special+r.special, billing:a.billing+r.billing, gst:a.gst+r.gst, deduction:a.deduction+r.deduction, hold:a.hold+r.hold, net:a.net+r.net
-      }), {salary:0,pf:0,esic:0,bonus:0,leaveWages:0,pt:0,labour:0,vendor:0,special:0,billing:0,gst:0,deduction:0,hold:0,net:0});
+        special:a.special+r.special, billing:a.billing+r.billing, received:a.received+r.received, gst:a.gst+r.gst, deduction:a.deduction+r.deduction, hold:a.hold+r.hold, net:a.net+r.net
+      }), {salary:0,pf:0,esic:0,bonus:0,leaveWages:0,pt:0,labour:0,vendor:0,special:0,billing:0,received:0,gst:0,deduction:0,hold:0,net:0});
       const siteAvgLabour = siteTotal.labour / MONTHS.length;
       return `
         <div style="display:flex;align-items:center;gap:8px;margin:20px 0 8px;">
@@ -612,10 +616,10 @@ function renderDashboard(page){
           <span class="badge ${site.type==='Private'?'private':'sitewise'}">${site.type}</span>
         </div>
         <div style="overflow-x:auto;margin-bottom:8px;">
-        <table style="min-width:1080px;">
+        <table style="min-width:1180px;">
           <tr>
             <th>Month</th><th class="num">Salary</th><th class="num">PF</th><th class="num">ESIC</th><th class="num">Bonus</th><th class="num">Leave Wages</th><th class="num">PT</th><th class="num">Labour Strength</th>
-            <th class="num">Vendor</th><th class="num">Other</th><th class="num">Billing</th><th class="num">GST</th><th class="num">Deduction</th><th class="num">Hold</th><th class="num">P/L</th>
+            <th class="num">Vendor</th><th class="num">Other</th><th class="num">Billing</th><th class="num">Payment received</th><th class="num">GST</th><th class="num">Deduction</th><th class="num">Hold</th><th class="num">P/L</th>
           </tr>
           ${siteMonthRows.map(r=>`
             <tr>
@@ -630,6 +634,7 @@ function renderDashboard(page){
               <td class="num mono">${fmtCurrency(r.vendor)}</td>
               <td class="num mono">${fmtCurrency(r.special)}</td>
               <td class="num mono">${fmtCurrency(r.billing)}</td>
+              <td class="num mono">${fmtCurrency(r.received)}</td>
               <td class="num mono">${fmtCurrency(r.gst)}</td>
               <td class="num mono">${fmtCurrency(r.deduction)}</td>
               <td class="num mono">${fmtCurrency(r.hold)}</td>
@@ -648,6 +653,7 @@ function renderDashboard(page){
             <td class="num mono">${fmtCurrency(siteTotal.vendor)}</td>
             <td class="num mono">${fmtCurrency(siteTotal.special)}</td>
             <td class="num mono">${fmtCurrency(siteTotal.billing)}</td>
+            <td class="num mono">${fmtCurrency(siteTotal.received)}</td>
             <td class="num mono">${fmtCurrency(siteTotal.gst)}</td>
             <td class="num mono">${fmtCurrency(siteTotal.deduction)}</td>
             <td class="num mono">${fmtCurrency(siteTotal.hold)}</td>
